@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class ActivityTracker : MonoBehaviour {
     public Text distanceText;
+	public Text latText;
+	public Text lonText;
 
     private LocationInfo lastLoc;
     private bool gotLocation = false;
@@ -48,8 +50,11 @@ public class ActivityTracker : MonoBehaviour {
 
     private void Update()
     {
-        if(Input.location.status == LocationServiceStatus.Running && !Input.location.lastData.Equals(lastLoc))
+		if(Input.location.status == LocationServiceStatus.Running && 
+			(Input.location.lastData.latitude != lastLoc.latitude || Input.location.lastData.longitude != lastLoc.longitude))
         {
+			latText.text = "Lat: " + Input.location.lastData.latitude.ToString ();
+			lonText.text = "Lon: " + Input.location.lastData.longitude.ToString ();
             if(!gotLocation)
             {
                 lastLoc = Input.location.lastData;
@@ -59,6 +64,7 @@ public class ActivityTracker : MonoBehaviour {
             {
                 totalDist += CalcDistance(lastLoc, Input.location.lastData);
                 distanceText.text = "Distance: " + totalDist.ToString();
+				lastLoc = Input.location.lastData;
             }
         }
     }
@@ -71,7 +77,7 @@ public class ActivityTracker : MonoBehaviour {
         double deltaLat = DegToRad(loc2.latitude - loc1.latitude);
         double deltaLon = DegToRad(loc2.longitude - loc1.longitude);
 
-        double a = Math.Pow(Math.Sin(deltaLat / 2.0), 2.0) + Math.Cos(lat1) + Math.Cos(lat2) + Math.Pow(Math.Sin(deltaLon / 2.0), 2.0);
+        double a = Math.Pow(Math.Sin(deltaLat / 2.0), 2.0) + Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(deltaLon / 2.0), 2.0);
         double c = 2.0 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         // 6371000 is radius of earth in meters
         return 6371000.0 * c;
