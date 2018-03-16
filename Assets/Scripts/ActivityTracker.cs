@@ -1,18 +1,28 @@
 ﻿using System;
 using System.Collections;
+using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ActivityTracker : MonoBehaviour {
     public Text distanceText;
 	public Text latText;
 	public Text lonText;
+    public Text updateText;
 
     private LocationInfo lastLoc;
     private bool gotLocation = false;
     private double totalDist = 0f;
-	// Use this for initialization
-	void Start () {
+    private string filePath = String.Empty;
+    private int updateCount = 0;
+    // Use this for initialization
+    void Start () {
+        filePath = Path.Combine(Application.persistentDataPath, "Data") + "\\data.txt";
+        if (File.Exists(filePath))
+            totalDist = Convert.ToDouble(File.ReadAllText(filePath));
+        distanceText.text = "Distance: " + totalDist.ToString();
+        updateText.text = "Update Count: " + updateCount.ToString();
         StartCoroutine(StartGPSService());
 	}
 
@@ -62,9 +72,12 @@ public class ActivityTracker : MonoBehaviour {
             }
             else
             {
+                updateCount++;
+                updateText.text = "Update Count: " + updateCount.ToString();
                 totalDist += CalcDistance(lastLoc, Input.location.lastData);
                 distanceText.text = "Distance: " + totalDist.ToString();
 				lastLoc = Input.location.lastData;
+                File.WriteAllText(filePath, totalDist.ToString());
             }
         }
     }
@@ -79,12 +92,19 @@ public class ActivityTracker : MonoBehaviour {
 
         double a = Math.Pow(Math.Sin(deltaLat / 2.0), 2.0) + Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(deltaLon / 2.0), 2.0);
         double c = 2.0 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-        // 6371000 is radius of earth in meters
-        return 6371000.0 * c;
+        // 3959 is radius of earth in miles
+        return 3959.0 * c;
     }
 
     private double DegToRad(double deg)
     {
         return deg * Mathf.Deg2Rad;
+    }
+
+    public void ResetData()
+    {
+        if(File.Exists(filePath))
+            File.Delete(filePath);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
