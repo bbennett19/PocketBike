@@ -6,6 +6,8 @@ public class PlayerController : MonoBehaviour {
 	public float targetSpeed;
     public float speedAcceleration;
 	public float maxTorque;
+	public float accelerometerMax = 0.7f;
+	public float accelerometerDeadZone = 0.1f;
 	public WheelJoint2D wheel;
 	private JointMotor2D _wheelMotor;
 	private Rigidbody2D _rgbd;
@@ -32,10 +34,12 @@ public class PlayerController : MonoBehaviour {
 
         Debug.Log(Input.acceleration);
 
-		if (Input.GetKey (KeyCode.A)) {
-			_torque = maxTorque;
-		} else if (Input.GetKey (KeyCode.D)) {
-			_torque = -maxTorque;
+		if (Input.GetKey (KeyCode.A) || Input.acceleration.x < accelerometerDeadZone) {
+			Debug.Log ("back");
+			_torque = maxTorque*(Input.acceleration.x*-1f);
+		} else if (Input.GetKey (KeyCode.D) || Input.acceleration.x > accelerometerDeadZone) {
+			Debug.Log ("Forward");
+			_torque = -maxTorque*Input.acceleration.x;
 		} else {
 			_torque = 0f;
             _rgbd.angularVelocity = 0f;
