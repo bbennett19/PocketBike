@@ -5,6 +5,7 @@ using UnityEngine;
 public class LevelGenerator : MonoBehaviour {
 	public float generatorDeltaX = 1.0f;
 	public float generatorY = 0f;
+    public float bottomHeight = 0f;
 
 	public float width = 1f;
 	public float heightMultiplier = 1f;
@@ -26,7 +27,7 @@ public class LevelGenerator : MonoBehaviour {
 		Vector2[] uvs = new Vector2[(numBlocks + 1) * 2];
 		float height = heightMultiplier * Mathf.PerlinNoise(0f, generatorY);
 		// Create inital first two points
-		verts [0] = new Vector3 (0, 0, 0);
+		verts [0] = new Vector3 (0, bottomHeight, 0);
 		verts [1] = new Vector3 (0, height, 0);
 
 		// Add both vertices to the collider path
@@ -42,7 +43,7 @@ public class LevelGenerator : MonoBehaviour {
 		for (int i = 0; i < numBlocks; i++) {
 			// Create two new verties for this block (two verts from previous block will be reused)
 			height = heightMultiplier * Mathf.PerlinNoise(((i+1)*generatorDeltaX), generatorY);
-			verts [(i * 2) + 2] = new Vector3 ((i + 1) * width, 0, 0);
+			verts [(i * 2) + 2] = new Vector3 ((i + 1) * width, bottomHeight, 0);
 			verts [(i * 2) + 3] = new Vector3 ((i + 1) * width, height, 0);
 
 			// Add the top vertex to the collider path

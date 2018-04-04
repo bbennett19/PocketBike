@@ -4,28 +4,33 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
 	public float targetSpeed;
+    public float speedAcceleration;
 	public float maxTorque;
 	public WheelJoint2D wheel;
 	private JointMotor2D _wheelMotor;
 	private Rigidbody2D _rgbd;
 	private float _torque;
+    private float _currentSpeed = 0f;
+
 	// Use this for initialization
-	void Start () {
+	void Start () {        
 		_wheelMotor = wheel.motor;
 		_rgbd = GetComponent<Rigidbody2D> ();
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if (Input.GetKey (KeyCode.Space)) {
+		if (Input.GetKey (KeyCode.Space) || Input.touchCount > 0) {
 			wheel.useMotor = true;
-			_wheelMotor.motorSpeed = targetSpeed;
+            _currentSpeed += speedAcceleration * Time.deltaTime;
+            _currentSpeed = Mathf.Clamp(_currentSpeed, targetSpeed, 0f);
+			_wheelMotor.motorSpeed = _currentSpeed;
 			wheel.motor = _wheelMotor;
 		} else {
 			wheel.useMotor = false;
-			//_wheelMotor.motorSpeed = 0;
 		}
-			
+
+        Debug.Log(Input.acceleration);
 
 		if (Input.GetKey (KeyCode.A)) {
 			_torque = maxTorque;
@@ -33,12 +38,19 @@ public class PlayerController : MonoBehaviour {
 			_torque = -maxTorque;
 		} else {
 			_torque = 0f;
+            _rgbd.angularVelocity = 0f;
 		}
 
+    }
+
+    void FixedUpdate() {
+		_rgbd.AddTorque(_torque);
+        _rgbd.angularVelocity = Mathf.Clamp(_rgbd.angularVelocity, -180f, 180f);
 	}
 
-	void FixedUpdate() {
-		_rgbd.AddTorque(_torque);
-	}
+    public void Freeze()
+    {
+        _rgbd.constraints = RigidbodyConstraints2D.FreezeAll;
+    }
 
 }

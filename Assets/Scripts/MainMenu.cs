@@ -7,11 +7,16 @@ public class MainMenu : MonoBehaviour {
 
 	public void LoadRace()
     {
-        SceneManager.LoadScene("main");
+        SceneManager.LoadScene("race_main");
     }
 
     public void LoadTracker()
     {
         SceneManager.LoadScene("tracker");
+    }
+
+    public void LoadShop()
+    {
+        SceneManager.LoadScene("shop");
     }
 }
