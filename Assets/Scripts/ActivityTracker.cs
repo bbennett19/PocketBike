@@ -10,19 +10,23 @@ public class ActivityTracker : MonoBehaviour {
 	public Text latText;
 	public Text lonText;
     public Text updateText;
+    public Text pointsText;
 
     private LocationInfo lastLoc;
     private bool gotLocation = false;
     private double totalDist = 0f;
-    private string filePath = String.Empty;
     private int updateCount = 0;
+    private int points = 0;
+    private int init_points = 0;
+    private double init_dist = 0f;
+
     // Use this for initialization
     void Start () {
-        filePath = Path.Combine(Application.persistentDataPath, "Data") + "\\data.txt";
-        if (File.Exists(filePath))
-            totalDist = Convert.ToDouble(File.ReadAllText(filePath));
+        pointsText.text = "Generated: " + points.ToString() + " points!";
         distanceText.text = "Distance: " + totalDist.ToString();
         updateText.text = "Update Count: " + updateCount.ToString();
+        init_points = PlayerPointsAndItems.Instance.data.Points;
+        init_dist = PlayerPointsAndItems.Instance.data.DistanceTraveled;
         StartCoroutine(StartGPSService());
 	}
 
@@ -77,7 +81,10 @@ public class ActivityTracker : MonoBehaviour {
                 totalDist += CalcDistance(lastLoc, Input.location.lastData);
                 distanceText.text = "Distance: " + totalDist.ToString();
 				lastLoc = Input.location.lastData;
-                File.WriteAllText(filePath, totalDist.ToString());
+                points = (int)(totalDist * 100);
+                PlayerPointsAndItems.Instance.data.Points = init_points + points;
+                PlayerPointsAndItems.Instance.data.DistanceTraveled = init_dist + totalDist;
+                pointsText.text = "Generated: " + points.ToString() + " points!";
             }
         }
     }
@@ -103,8 +110,14 @@ public class ActivityTracker : MonoBehaviour {
 
     public void ResetData()
     {
-        if(File.Exists(filePath))
-            File.Delete(filePath);
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        PlayerPointsAndItems.Instance.data.Points = 0;
+        PlayerPointsAndItems.Instance.data.DistanceTraveled = 0f;
+    }
+
+    public void GenPoints()
+    {
+        points += 10;
+        PlayerPointsAndItems.Instance.data.Points = init_points + points;
+        pointsText.text = "Generated: " + points.ToString() + " points!";
     }
 }
