@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LevelGenerator : MonoBehaviour {
+public class LevelGenerator : MonoBehaviour
+{
 	public float generatorDeltaX = 1.0f;
 	public float generatorY = 0f;
     public float bottomHeight = 0f;
@@ -11,7 +12,8 @@ public class LevelGenerator : MonoBehaviour {
 	public float heightMultiplier = 1f;
 	public float levelLength = 2f;
 	// Use this for initialization
-	void Start () {
+	void Start ()
+    {
 		// Collider path, used to create a PolygonCollider2D
 		List<Vector2> colliderPath = new List<Vector2> ();
 
@@ -40,7 +42,9 @@ public class LevelGenerator : MonoBehaviour {
 		uvs [0] = new Vector2 (0f, 0f);
 		uvs [1] = new Vector2 (0f, 1f);
 		int triCount = 0;
-		for (int i = 0; i < numBlocks; i++) {
+
+		for (int i = 0; i < numBlocks; i++)
+        {
 			// Create two new verties for this block (two verts from previous block will be reused)
 			height = heightMultiplier * Mathf.PerlinNoise(((i+1)*generatorDeltaX), generatorY);
 			verts [(i * 2) + 2] = new Vector3 ((i + 1) * width, bottomHeight, 0);

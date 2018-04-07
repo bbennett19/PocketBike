@@ -5,7 +5,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class ActivityTracker : MonoBehaviour {
+public class ActivityTracker : MonoBehaviour
+{
     public Text distanceText;
 	public Text latText;
 	public Text lonText;
@@ -21,7 +22,8 @@ public class ActivityTracker : MonoBehaviour {
     private double init_dist = 0f;
 
     // Use this for initialization
-    void Start () {
+    void Start ()
+    {
         pointsText.text = "Generated: " + points.ToString() + " points!";
         distanceText.text = "Distance: " + totalDist.ToString();
         updateText.text = "Update Count: " + updateCount.ToString();

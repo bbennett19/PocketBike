@@ -11,13 +11,15 @@ public class PlayerData
 }
 
 
-public class PlayerPointsAndItems : MonoBehaviour {
+public class PlayerPointsAndItems : MonoBehaviour
+{
     public static PlayerPointsAndItems Instance;
 
     public PlayerData data = new PlayerData();
 
 	// Use this for initialization
-	void Awake () {
+	void Awake ()
+    {
 		if(Instance == null)
         {
             DontDestroyOnLoad(gameObject);
@@ -29,18 +31,6 @@ public class PlayerPointsAndItems : MonoBehaviour {
             Destroy(gameObject);
         }
 	}
-
-    /*private void OnApplicationPause(bool pause)
-    {
-        if (pause)
-        {
-            Save();
-        }
-        else
-        {
-            Load();
-        }
-    }*/
 
     private void OnApplicationQuit()
     {

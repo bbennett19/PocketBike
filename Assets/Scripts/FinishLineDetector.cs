@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class FinishLineDetector : MonoBehaviour {
+public class FinishLineDetector : MonoBehaviour
+{
     public Timer timer;
     public PlayerController playerController;
 

@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FinishLine : MonoBehaviour {
+public class FinishLine : MonoBehaviour
+{
     public float position;
 
 	// Use this for initialization
-	void Start () {
+	void Start ()
+    {
         this.transform.position = new Vector2(position, 0);	
 	}
 

@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Timer : MonoBehaviour {
+public class Timer : MonoBehaviour
+{
     public Text timerText;
     private float _elapsed;
     private bool _running = true;
@@ -14,7 +15,8 @@ public class Timer : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update () {
+    void Update ()
+    {
         if (_running)
         {
             _elapsed += Time.deltaTime;
