@@ -921,6 +921,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fe720f7fa34cbf448aef9ca31063efe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  deleteSave: 0
+  data:
+    itemsPurchased: 000000000000000000000000000000000000000000000000
 --- !u!1 &1424611526
 GameObject:
   m_ObjectHideFlags: 0
