@@ -890,6 +890,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1196887688}
   - component: {fileID: 1196887689}
+  - component: {fileID: 1196887690}
   m_Layer: 0
   m_Name: PlayerPointsAndItems
   m_TagString: Untagged
@@ -924,6 +925,17 @@ MonoBehaviour:
   deleteSave: 0
   data:
     itemsPurchased: 000000000000000000000000000000000000000000000000
+--- !u!114 &1196887690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1196887687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d75c1fcfa0c2aba44afa6501cd030e6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1424611526
 GameObject:
   m_ObjectHideFlags: 0
