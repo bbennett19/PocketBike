@@ -6,7 +6,7 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var fs = require('fs');
 var router = express.Router();
-var port = process.env.PORT || 8080;
+var port = process.env.PORT || 12355;
 var dbConnected = false;
 var dbConnectionInfo = require('./config')
 var connection = mysql.createConnection(dbConnectionInfo.config);
@@ -42,7 +42,7 @@ router.route('/player/create')
     }
     else {
       var error = false;
-      var sql = mysql.format("INSERT INTO PLAYER (PLAYER_id, name, points, distance)\
+      var sql = mysql.format("INSERT INTO player (PLAYER_id, name, points, distance)\
                               VALUES(?, ?, 0, 0.0)", [player_id, player_name]);
 
       // Database stuff. First add player to PLAYER, then add info to BEST_TIME
@@ -51,8 +51,8 @@ router.route('/player/create')
           error = true;
           return next(err);
         }
-        sql = mysql.format("INSERT INTO BEST_TIME (level_id, time, PLAYER_id)\
-                            VALUES(0, 99.99, ?)", [player_id]);
+        sql = mysql.format("INSERT INTO best_time (level_id, time, PLAYER_id, timestamp)\
+                            VALUES(0, 99.99, ?, now())", [player_id]);
         connection.query(sql, function(err, result, fields){
           if(err) {
             return next(err);
@@ -66,7 +66,7 @@ router.route('/player/create')
 router.route('/player/:player_id')
   // Get player info
   .get(function(req, res, next) {
-    var sql = mysql.format("SELECT * FROM PLAYER WHERE PLAYER_id = ?", [req.params.player_id]);
+    var sql = mysql.format("SELECT * FROM player WHERE PLAYER_id = ?", [req.params.player_id]);
     connection.query(sql, function(err, result, fields){
       if(err) return next(err);
       res.json(result);
@@ -81,15 +81,20 @@ router.route('/player/:player_id')
     var distance = req.body.distance;
 
     if(player_name == undefined || points == undefined || distance == undefined) {
+      console.log("UPDATE: undefined values");
       res.json({message: "undefined values"})
     }
 
-    var sql = mysql.format("UPDATE PLAYER\
+    console.log("UPDATE: " + player_id);
+    var sql = mysql.format("UPDATE player\
                             SET name=?, points=?, distance=?\
                             WHERE PLAYER_id=?", [player_name,points,distance,player_id]);
     connection.query(sql, function(err, result, fields){
       if(err) return next(err);
-      if(result.affectedRows == 0) return next(new Error());
+      if(result.affectedRows == 0) {
+        console.log("No rows for " + player_id);
+        return next(new Error());
+      }
       res.json(result);
     });
   });
@@ -113,15 +118,40 @@ router.route('/player/ghost/:player_id/:level_id')
     });
   });
 
-router.route('/best_time/:player_id/:level_id')
-  // Gets high scores of player_id on level_id
-  .get(function(req, res, next) {
-    var sql = mysql.format("SELECT name, time FROM BEST_TIME JOIN PLAYER USING(PLAYER_id) WHERE level_id = ? ORDER BY time", [req.params.level_id]);
+router.route('/best_time/:level_id')
+.get(function(req, res, next) {
+  var level_id = req.params.level_id;
+
+  // Distance high score list
+  if(level_id == -1)
+  {
+    var sql = "SELECT PLAYER_id, name, distance\
+               FROM player\
+               ORDER BY distance DESC"
+     connection.query(sql, function(err, result, fields){
+       if(err) return next(err);
+       res.json(result);
+     });
+  }
+  else
+  {
+    var sql = mysql.format("SELECT PLAYER_id, name, time FROM best_time JOIN player USING(PLAYER_id) WHERE level_id = ? ORDER BY time, timestamp", [req.params.level_id]);
     connection.query(sql, function(err, result, fields){
       if(err) return next(err);
       res.json(result);
     });
-  })
+  }
+});
+
+router.route('/best_time/:player_id/:level_id')
+  // Gets high scores of player_id on level_id
+  /*.get(function(req, res, next) {
+    var sql = mysql.format("SELECT name, time FROM best_time JOIN player USING(PLAYER_id) WHERE level_id = ? ORDER BY time", [req.params.level_id]);
+    connection.query(sql, function(err, result, fields){
+      if(err) return next(err);
+      res.json(result);
+    });
+  })*/
 
   // Updates high score of player_id on level_id
   .post(function(req, res, next){
@@ -133,8 +163,8 @@ router.route('/best_time/:player_id/:level_id')
       res.json({message: "undefined values"})
     }
 
-    var sql = mysql.format("UPDATE BEST_TIME\
-                            SET time=?\
+    var sql = mysql.format("UPDATE best_time\
+                            SET time=?, timestamp=now()\
                             WHERE PLAYER_id=? AND level_id=?", [new_time,player_id,level_id]);
     connection.query(sql, function(err, result, fields){
       if(err) return next(err);

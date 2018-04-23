@@ -5,32 +5,14 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using UnityEngine.Networking;
-
-[Serializable]
-public class PlayerData
-{
-    public bool[] itemsPurchased = new bool[24];
-    public int Points { get; set; }
-    public double DistanceTraveled { get; set; }
-    
-    public void SetupData()
-    {
-        if(itemsPurchased == null)
-        {
-            itemsPurchased = new bool[24];
-        }
-    }
-}
-
+using UnityEngine.SceneManagement;
 
 public class PlayerPointsAndItems : MonoBehaviour
 {
     public bool deleteSave = false;
     public static PlayerPointsAndItems Instance;
-    public PlayerData data = new PlayerData();
-
-    private HTTPRequestHandler _httpHander = new HTTPRequestHandler();
-    
+    public PlayerData playerData = new PlayerData();
+    private bool _newPlayer = false;
 
 	// Use this for initialization
 	void Awake ()
@@ -51,9 +33,27 @@ public class PlayerPointsAndItems : MonoBehaviour
         }
 	}
 
+    public bool IsNewPlayer()
+    {
+        return _newPlayer;
+    }
+
+    // Make sure to save the data before quitting
     private void OnApplicationQuit()
     {
         Save();
+    }
+
+    private void OnApplicationPause(bool pause)
+    {
+        if(pause)
+        {
+            Save();
+        }
+        else
+        {
+            // CHeck for GPS updates
+        }
     }
 
     public void Save()
@@ -62,7 +62,7 @@ public class PlayerPointsAndItems : MonoBehaviour
         BinaryFormatter bf = new BinaryFormatter();
         FileStream file = File.Open(Application.persistentDataPath + "/save_data.dat", FileMode.OpenOrCreate);
 
-        bf.Serialize(file, data);
+        bf.Serialize(file, playerData);
         file.Close();
     }
 
@@ -73,19 +73,40 @@ public class PlayerPointsAndItems : MonoBehaviour
             Debug.Log("load");
             FileStream file = File.Open(Application.persistentDataPath + "/save_data.dat", FileMode.Open);
             BinaryFormatter bf = new BinaryFormatter();
-            data = bf.Deserialize(file) as PlayerData;
-            data.SetupData();
+            playerData = bf.Deserialize(file) as PlayerData;
+            playerData.SetupData();
             file.Close();
+
+            CheckForDataToUpload();
+        }
+        else
+        {
+            // If no save data it is a new player
+            _newPlayer = true;
         }
 
-        //StartCoroutine(_httpHander.CreatePlayerData(SystemInfo.deviceUniqueIdentifier, GeneratePlayerName(), CreatePlayerDataCallback));
-        StartCoroutine(_httpHander.GetPlayerData(SystemInfo.deviceUniqueIdentifier, GetPlayerDataCallback));
+        if(SceneManager.GetActiveScene().name == "LoadingScene")
+        {
+            SceneManager.LoadScene("main_scene");
+        }
     }
 
     private string GeneratePlayerName()
     {
         int num = (int)(UnityEngine.Random.value * 10000);
         return "Guest_" + num.ToString();
+    }
+
+    public void CheckForDataToUpload()
+    {
+        if (!playerData.PlayerDataHasBeenCreated)
+        {
+            StartCoroutine(HTTPRequestHandler.Instance.CreatePlayerData(SystemInfo.deviceUniqueIdentifier, playerData.Name, CreatePlayerDataCallback));
+        }
+        else if(playerData.PlayerDataToUpload)
+        {
+            StartCoroutine(HTTPRequestHandler.Instance.UpdatePlayerData(SystemInfo.deviceUniqueIdentifier, playerData.Name, playerData.Points, playerData.DistanceTraveled, UpdatePlayerDataCallback));
+        }
     }
 
     public void GetPlayerDataCallback(bool networkError, bool success, string jsonString)
@@ -97,22 +118,32 @@ public class PlayerPointsAndItems : MonoBehaviour
         else if(!success)
         {
             // Create player data
-            StartCoroutine(_httpHander.CreatePlayerData(SystemInfo.deviceUniqueIdentifier, GeneratePlayerName(), CreatePlayerDataCallback));
+            StartCoroutine(HTTPRequestHandler.Instance.CreatePlayerData(SystemInfo.deviceUniqueIdentifier, GeneratePlayerName(), CreatePlayerDataCallback));
         }
         else
         {
             Debug.Log(jsonString);
         }
     }
+
     public void CreatePlayerDataCallback(bool networkError, bool success)
     {
-        if (networkError)
+        if(success)
         {
-            Debug.Log("Network error");
+            playerData.PlayerDataHasBeenCreated = true;
+
+            if(playerData.PlayerDataToUpload)
+            {
+                StartCoroutine(HTTPRequestHandler.Instance.UpdatePlayerData(SystemInfo.deviceUniqueIdentifier, playerData.Name, playerData.Points, playerData.DistanceTraveled, UpdatePlayerDataCallback));
+            }
         }
-        else if (!success)
+    }
+
+    public void UpdatePlayerDataCallback(bool networkError, bool success)
+    {
+        if(success)
         {
-            Debug.Log("Player could not be created");
+            playerData.PlayerDataToUpload = false;
         }
     }
 

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.IO;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class ActivityTracker : MonoBehaviour
@@ -12,25 +10,28 @@ public class ActivityTracker : MonoBehaviour
 	public Text lonText;
     public Text updateText;
     public Text pointsText;
+    public Text errorText;
+    public Button collectButton;
+    public UIUpdater uiUpdater;
 
     private LocationInfo lastLoc;
     private bool gotLocation = false;
-    private double totalDist = 0f;
     private int updateCount = 0;
-    private int points = 0;
-    private int init_points = 0;
-    private double init_dist = 0f;
 
     // Use this for initialization
     void Start ()
     {
-        pointsText.text = "Generated: " + points.ToString() + " points!";
-        distanceText.text = "Distance: " + totalDist.ToString();
+        errorText.text = "";
+        collectButton.interactable = PlayerPointsAndItems.Instance.playerData.GeneratedPoints != 0;
+        SetTextFields();
         updateText.text = "Update Count: " + updateCount.ToString();
-        init_points = PlayerPointsAndItems.Instance.data.Points;
-        init_dist = PlayerPointsAndItems.Instance.data.DistanceTraveled;
         StartCoroutine(StartGPSService());
 	}
+
+    private void Awake()
+    {
+        DontDestroyOnLoad(this.gameObject);
+    }
 
     private IEnumerator StartGPSService()
     {
@@ -60,8 +61,6 @@ public class ActivityTracker : MonoBehaviour
             Debug.Log("BROKEN");
             yield break;
         }
-
-        
     }
 
     private void Update()
@@ -79,14 +78,16 @@ public class ActivityTracker : MonoBehaviour
             else
             {
                 updateCount++;
-                updateText.text = "Update Count: " + updateCount.ToString();
-                totalDist += CalcDistance(lastLoc, Input.location.lastData);
-                distanceText.text = "Distance: " + totalDist.ToString();
+                updateText.text = "Update: " + updateCount.ToString();
+                PlayerPointsAndItems.Instance.playerData.GeneratedDistance += CalcDistance(lastLoc, Input.location.lastData);
 				lastLoc = Input.location.lastData;
-                points = (int)(totalDist * 100);
-                PlayerPointsAndItems.Instance.data.Points = init_points + points;
-                PlayerPointsAndItems.Instance.data.DistanceTraveled = init_dist + totalDist;
-                pointsText.text = "Generated: " + points.ToString() + " points!";
+                PlayerPointsAndItems.Instance.playerData.GeneratedPoints = (int)(PlayerPointsAndItems.Instance.playerData.GeneratedDistance * 100);
+                SetTextFields();
+
+                if(PlayerPointsAndItems.Instance.playerData.GeneratedPoints > 0)
+                {
+                    collectButton.interactable = true;
+                }
             }
         }
     }
@@ -110,16 +111,50 @@ public class ActivityTracker : MonoBehaviour
         return deg * Mathf.Deg2Rad;
     }
 
-    public void ResetData()
+    public void CollectPoints()
     {
-        PlayerPointsAndItems.Instance.data.Points = 0;
-        PlayerPointsAndItems.Instance.data.DistanceTraveled = 0f;
+        string name = PlayerPointsAndItems.Instance.playerData.Name;
+        int newPoints = PlayerPointsAndItems.Instance.playerData.GetTotalPoints();
+        double newDistance = PlayerPointsAndItems.Instance.playerData.GetTotalDistance();
+        StartCoroutine(HTTPRequestHandler.Instance.UpdatePlayerData(SystemInfo.deviceUniqueIdentifier, name, newPoints, newDistance, AddPointsCallback));
     }
 
-    public void GenPoints()
+    public void AddPointsCallback(bool networkError, bool success)
     {
-        points += 10;
-        PlayerPointsAndItems.Instance.data.Points = init_points + points;
-        pointsText.text = "Generated: " + points.ToString() + " points!";
+        if(success)
+        {
+            // Add points and total distance
+            PlayerPointsAndItems.Instance.playerData.Points += PlayerPointsAndItems.Instance.playerData.GeneratedPoints;
+            PlayerPointsAndItems.Instance.playerData.DistanceTraveled += PlayerPointsAndItems.Instance.playerData.GeneratedDistance;
+            PlayerPointsAndItems.Instance.playerData.GeneratedPoints = 0;
+            PlayerPointsAndItems.Instance.playerData.GeneratedDistance = 0.0;
+            collectButton.interactable = false;
+            SetTextFields();
+            uiUpdater.UpdateText();
+        }
+        if(networkError || !success)
+        {
+            Debug.Log("Add points error");
+        }
+    }
+
+    public void ResetData()
+    {
+        PlayerPointsAndItems.Instance.playerData.Points = 0;
+        PlayerPointsAndItems.Instance.playerData.DistanceTraveled = 0f;
+    }
+
+    private void SetTextFields()
+    {
+        pointsText.text = "Points Generated: " + PlayerPointsAndItems.Instance.playerData.GeneratedPoints.ToString();
+        distanceText.text = "Distance: " + PlayerPointsAndItems.Instance.playerData.GeneratedDistance.ToString("0.00");
+    }
+
+    public void GeneratePoints()
+    {
+        collectButton.interactable = true;
+        PlayerPointsAndItems.Instance.playerData.GeneratedPoints += 10;
+        PlayerPointsAndItems.Instance.playerData.GeneratedDistance += .10;
+        SetTextFields();
     }
 }

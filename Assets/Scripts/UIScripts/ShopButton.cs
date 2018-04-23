@@ -16,12 +16,12 @@ public class ShopButton : MonoBehaviour
 
     private void OnEnable()
     {
-        _button.interactable = !PlayerPointsAndItems.Instance.data.itemsPurchased[itemID];
+        _button.interactable = !PlayerPointsAndItems.Instance.playerData.itemsPurchased[itemID];
     }
 
     public void Buy()
     {
-        PlayerPointsAndItems.Instance.data.itemsPurchased[itemID] = true;
+        PlayerPointsAndItems.Instance.playerData.itemsPurchased[itemID] = true;
         _button.interactable = false;
     }
 }

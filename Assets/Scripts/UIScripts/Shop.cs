@@ -10,6 +10,6 @@ public class Shop : MonoBehaviour
 	// Use this for initialization
 	void Start ()
     {
-        pointsText.text = "Points: " + PlayerPointsAndItems.Instance.data.Points.ToString();
+        pointsText.text = "Points: " + PlayerPointsAndItems.Instance.playerData.Points.ToString();
 	}
 }

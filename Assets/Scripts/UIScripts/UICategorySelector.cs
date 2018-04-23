@@ -16,6 +16,11 @@ public class UICategorySelector : MonoBehaviour
     {
         _currentSelected = defaultSelected;
         buttons[_currentSelected].interactable = false;
+
+        foreach(GameObject o in activatableObjects)
+        {
+            o.SetActive(false);
+        }
         activatableObjects[_currentSelected].SetActive(true);
 	}
 
