@@ -406,7 +406,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 107489233}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 500618750}
+        m_MethodName: LoadLevelClick
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 2
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
     m_TypeName: UnityEngine.UI.Button+ButtonClickedEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
 --- !u!114 &107489233
@@ -2385,6 +2396,7 @@ GameObject:
   - component: {fileID: 500618748}
   - component: {fileID: 500618747}
   - component: {fileID: 500618749}
+  - component: {fileID: 500618750}
   m_Layer: 0
   m_Name: UIScripts
   m_TagString: Untagged
@@ -2430,6 +2442,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   leaderboardObject: {fileID: 970106891}
+--- !u!114 &500618750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 500618746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d31a478e0c5dd3e46b978b22194bea7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &526392081
 GameObject:
   m_ObjectHideFlags: 0

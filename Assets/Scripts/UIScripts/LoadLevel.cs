@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class GoBack : MonoBehaviour
+public class LoadLevel : MonoBehaviour
 {
 
-	public void GoToMain()
+	public void LoadLevelClick(int levelID)
     {
-        SceneManager.LoadScene("main_scene");
+        SceneManager.LoadScene(levelID);
     }
 }
