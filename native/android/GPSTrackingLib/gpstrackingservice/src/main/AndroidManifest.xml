@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.pocketbike.gpstrackingservice">
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <application>
+        <service android:name="com.pocketbike.gpstrackingservice.GPSService"
+            android:enabled="true">
+        </service>
+    </application>
+</manifest>
