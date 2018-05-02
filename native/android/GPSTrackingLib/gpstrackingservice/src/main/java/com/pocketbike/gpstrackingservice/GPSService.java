@@ -46,6 +46,14 @@ public class GPSService extends Service implements LocationListener {
         startForeground(101, n);
     }
 
+    @Override
+    public void onDestroy() {
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        lm.removeUpdates(this);
+        stopForeground(true);
+        super.onDestroy();
+    }
+
     // Register this component for GPS updates
     private void startGPSService() {
         try {

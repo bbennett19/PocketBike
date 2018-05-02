@@ -13,10 +13,18 @@ public class ActivityTracker : MonoBehaviour
     public Text errorText;
     public Button collectButton;
     public UIUpdater uiUpdater;
+    public GPSLocationUpdateConsumer gpsLocationConsumer;
 
-    private LocationInfo lastLoc;
+    private GPSLocation lastLoc = new GPSLocation(0,0);
     private bool gotLocation = false;
     private int updateCount = 0;
+    private float elapsed = 0f;
+
+#if UNITY_ANDROID
+    private AndroidJavaClass _serviceLauncher;
+#endif
+
+    private bool _gpsServiceActive = false;
 
     // Use this for initialization
     void Start ()
@@ -25,47 +33,92 @@ public class ActivityTracker : MonoBehaviour
         collectButton.interactable = PlayerPointsAndItems.Instance.playerData.GeneratedPoints != 0;
         SetTextFields();
         updateText.text = "Update Count: " + updateCount.ToString();
-        StartCoroutine(StartGPSService());
+        LaunchGPSService();
+
 	}
+
+    private void LaunchGPSService()
+    {
+#if UNITY_ANDROID 
+
+        if (Input.location.isEnabledByUser)
+        {
+            gpsLocationConsumer.OnLocationUpdate += UpdateLocation;
+            //_androidGPSCallback.tracker = this;
+            // Get the unity android activity
+            AndroidJavaObject activity = new AndroidJavaClass("com.unity3d.player.UnityPlayer").GetStatic<AndroidJavaObject>("currentActivity");
+            _serviceLauncher = new AndroidJavaClass("com.pocketbike.gpstrackingservice.ServiceLauncher");
+            _serviceLauncher.CallStatic("setActivityInstance", activity);
+            _gpsServiceActive = _serviceLauncher.CallStatic<bool>("startService", gpsLocationConsumer.callback);
+
+            if (!_gpsServiceActive)
+                errorText.text = "Error on Launch";
+            else
+                errorText.text = "No error on launch";
+        }
+#endif
+    }
 
     private void Awake()
     {
         DontDestroyOnLoad(this.gameObject);
     }
 
-    private IEnumerator StartGPSService()
+    private void OnApplicationQuit()
     {
-        if (!Input.location.isEnabledByUser)
-        {
-            Debug.Log("NO GPS");
-            yield break;
-        }
+#if UNITY_ANDROID
+        gpsLocationConsumer.OnLocationUpdate -= UpdateLocation;
+        _serviceLauncher.CallStatic("stopService");
+#endif
+    }
 
-        Input.location.Start();
-        int maxWait = 20;
+    public void UpdateLocation(GPSLocation location)
+    {
 
-        while(Input.location.status == LocationServiceStatus.Initializing && maxWait > 0)
+        
+        if (!gotLocation || (location.Latitude != lastLoc.Latitude || location.Longitude != lastLoc.Longitude))
         {
-            yield return new WaitForSeconds(1);
-            maxWait--;
-        }
+            updateCount++;
+            updateText.text = "Update: " + updateCount.ToString();
+            latText.text = "Lat: " + location.Latitude.ToString();
+            lonText.text = "Lon: " + location.Longitude.ToString();
+            if (!gotLocation)
+            {
+                lastLoc = location;
+                gotLocation = true;
+            }
+            else
+            {
 
-        if(maxWait == 0)
-        {
-            Debug.Log("TIME OUT");
-            yield break;
-        }
+                PlayerPointsAndItems.Instance.playerData.GeneratedDistance += CalcDistance(lastLoc, location);
+                lastLoc = location;
+                PlayerPointsAndItems.Instance.playerData.GeneratedPoints = (int)(PlayerPointsAndItems.Instance.playerData.GeneratedDistance * 100);
+                SetTextFields();
 
-        if(Input.location.status == LocationServiceStatus.Failed)
-        {
-            Debug.Log("BROKEN");
-            yield break;
+                if (PlayerPointsAndItems.Instance.playerData.GeneratedPoints > 0)
+                {
+                    collectButton.interactable = true;
+                }
+            }
         }
     }
 
     private void Update()
     {
-		if(Input.location.status == LocationServiceStatus.Running && 
+        elapsed += Time.deltaTime;
+
+        if(elapsed >= 5f)
+        {
+            //errorText.text = _serviceLauncher.CallStatic<int>("queryUpdateCount").ToString()+":"+_androidGPSCallback.test.ToString();
+            //_serviceLauncher.CallStatic("test");
+            elapsed = 0f;
+            //updateText.text = _androidGPSCallback.test.ToString();
+
+            //latText.text = "Lat: "+_androidGPSCallback.lastLat.ToString();
+            //lonText.text = "Lon: " + _androidGPSCallback.lastLon.ToString();
+
+        }
+		/*if(Input.location.status == LocationServiceStatus.Running && 
 			(Input.location.lastData.latitude != lastLoc.latitude || Input.location.lastData.longitude != lastLoc.longitude))
         {
 			latText.text = "Lat: " + Input.location.lastData.latitude.ToString ();
@@ -89,16 +142,16 @@ public class ActivityTracker : MonoBehaviour
                     collectButton.interactable = true;
                 }
             }
-        }
+        }*/
     }
 
-    private double CalcDistance(LocationInfo loc1, LocationInfo loc2)
+    private double CalcDistance(GPSLocation loc1, GPSLocation loc2)
     {
         // Haversine formula for calculating distance between two lat/lon values
-        double lat1 = DegToRad(loc1.latitude);
-        double lat2 = DegToRad(loc2.latitude);
-        double deltaLat = DegToRad(loc2.latitude - loc1.latitude);
-        double deltaLon = DegToRad(loc2.longitude - loc1.longitude);
+        double lat1 = DegToRad(loc1.Latitude);
+        double lat2 = DegToRad(loc2.Latitude);
+        double deltaLat = DegToRad(loc2.Latitude - loc1.Latitude);
+        double deltaLon = DegToRad(loc2.Longitude - loc1.Longitude);
 
         double a = Math.Pow(Math.Sin(deltaLat / 2.0), 2.0) + Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(deltaLon / 2.0), 2.0);
         double c = 2.0 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
