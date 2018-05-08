@@ -7,23 +7,19 @@ public class NewPlayerModalPanel : MonoBehaviour
 {
     public Button submitButton;
     public InputField inputText;
-    public UIUpdater uiUpdater;
 
 	// Use this for initialization
 	void Start ()
     {
         submitButton.interactable = false;
-	    if(!PlayerPointsAndItems.Instance.IsNewPlayer())
-        {
-            gameObject.SetActive(false);
-        }
 	}
 	
 	public void Submit()
     {
         // Attempt to create player on server
-        PlayerPointsAndItems.Instance.playerData.Name = inputText.text;
+        PlayerPointsAndItems.Instance.playerData.SetPlayerNameChangeWithEvent(inputText.text);
         PlayerPointsAndItems.Instance.playerData.PlayerDataToUpload = true;
+        PlayerPointsAndItems.Instance.playerData.DisplayGetName = false;
         PlayerPointsAndItems.Instance.playerData.PlayerDataHasBeenCreated = false;
         StartCoroutine(HTTPRequestHandler.Instance.CreatePlayerData(SystemInfo.deviceUniqueIdentifier, inputText.text, CreatePlayerDataCallback));
     }
@@ -34,7 +30,6 @@ public class NewPlayerModalPanel : MonoBehaviour
         {
             PlayerPointsAndItems.Instance.playerData.PlayerDataToUpload = false;
             PlayerPointsAndItems.Instance.playerData.PlayerDataHasBeenCreated = true;
-            uiUpdater.UpdateText();
             gameObject.SetActive(false);
         }
         else if (!networkError && !success)
@@ -47,8 +42,7 @@ public class NewPlayerModalPanel : MonoBehaviour
         }
         else
         {
-            uiUpdater.UpdateText();
-            gameObject.SetActive(false);
+            Destroy(this.gameObject);
         }
     }
 
@@ -58,9 +52,7 @@ public class NewPlayerModalPanel : MonoBehaviour
         {
             PlayerPointsAndItems.Instance.playerData.PlayerDataToUpload = false;
         }
-
-        uiUpdater.UpdateText();
-        gameObject.SetActive(false);
+        Destroy(this.gameObject);
         
     }
 

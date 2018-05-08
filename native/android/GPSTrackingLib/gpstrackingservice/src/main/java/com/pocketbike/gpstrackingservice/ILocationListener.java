@@ -4,5 +4,5 @@ package com.pocketbike.gpstrackingservice;
 // This interface is required to be implemented in the Unity application
 // in order to receive updates
 public interface ILocationListener {
-    void updateLocation(double lat, double lon);
+    void updateLocation(double lat, double lon, double speed);
 }

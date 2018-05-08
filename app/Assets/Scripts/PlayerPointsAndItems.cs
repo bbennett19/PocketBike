@@ -9,34 +9,23 @@ using UnityEngine.SceneManagement;
 
 public class PlayerPointsAndItems : MonoBehaviour
 {
-    public bool deleteSave = false;
     public static PlayerPointsAndItems Instance;
-    public PlayerData playerData = new PlayerData();
-    private bool _newPlayer = false;
 
-	// Use this for initialization
-	void Awake ()
+    public PlayerData playerData = new PlayerData();
+
+    // Use this for initialization
+    void Awake ()
     {
 		if(Instance == null)
         {
             DontDestroyOnLoad(gameObject);
             Instance = this;
-            if(File.Exists(Application.persistentDataPath + "/save_data.dat") && deleteSave)
-            {
-                File.Delete(Application.persistentDataPath + "/save_data.dat");
-            }
-            Load();
         }
         else if(Instance != this)
         {
             Destroy(gameObject);
         }
 	}
-
-    public bool IsNewPlayer()
-    {
-        return _newPlayer;
-    }
 
     // Make sure to save the data before quitting
     private void OnApplicationQuit()
@@ -50,18 +39,12 @@ public class PlayerPointsAndItems : MonoBehaviour
         {
             Save();
         }
-        else
-        {
-            // CHeck for GPS updates
-        }
     }
 
     public void Save()
     {
-        Debug.Log("save");
         BinaryFormatter bf = new BinaryFormatter();
         FileStream file = File.Open(Application.persistentDataPath + "/save_data.dat", FileMode.OpenOrCreate);
-
         bf.Serialize(file, playerData);
         file.Close();
     }
@@ -79,15 +62,13 @@ public class PlayerPointsAndItems : MonoBehaviour
 
             CheckForDataToUpload();
         }
-        else
-        {
-            // If no save data it is a new player
-            _newPlayer = true;
-        }
+    }
 
-        if(SceneManager.GetActiveScene().name == "LoadingScene")
+    public void DeleteSaveData()
+    {
+        if (File.Exists(Application.persistentDataPath + "/save_data.dat"))
         {
-            SceneManager.LoadScene("main_scene");
+            File.Delete(Application.persistentDataPath + "/save_data.dat");
         }
     }
 

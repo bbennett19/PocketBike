@@ -11,12 +11,26 @@ public class UIUpdater : MonoBehaviour
 	// Use this for initialization
 	void Start ()
     {
-        UpdateText();	
-	}
-	
-	public void UpdateText()
-    {
         nameText.text = PlayerPointsAndItems.Instance.playerData.Name;
         pointsText.text = "Points: " + PlayerPointsAndItems.Instance.playerData.Points.ToString();
+        PlayerPointsAndItems.Instance.playerData.PlayerNameChange += UpdatePlayerName;
+        PlayerPointsAndItems.Instance.playerData.PlayerPointsChange += UpdatePlayerPoints;
+    }
+
+    private void OnDestroy()
+    {
+        PlayerPointsAndItems.Instance.playerData.PlayerNameChange -= UpdatePlayerName;
+        PlayerPointsAndItems.Instance.playerData.PlayerPointsChange -= UpdatePlayerPoints;
+    }
+
+
+    public void UpdatePlayerName(string name)
+    {
+        nameText.text = name;
+    }
+
+    public void UpdatePlayerPoints(int points)
+    {
+        pointsText.text = "Points: " + points;
     }
 }

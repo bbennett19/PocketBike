@@ -17,59 +17,61 @@ public class PlayerController : MonoBehaviour
     private Vector2 _force = new Vector2();
     private Vector2 _forceLocation = new Vector2();
     private bool _addForce = false;
+    private bool _paused = false;
 
 	// Use this for initialization
 	void Start ()
     {        
 		_wheelMotor = wheel.motor;
-		_rgbd = GetComponent<Rigidbody2D> ();
+		_rgbd = GetComponent<Rigidbody2D>();
+        Freeze();
+        RaceManager.StartRaceEvent += UnFreeze;
+        RaceManager.PauseRaceEvent += Freeze;
+        RaceManager.EndRaceEvent += EndRace;
 	}
-	
-	// Update is called once per frame
-	void Update ()
+
+    private void OnDestroy()
     {
-		/*if (Input.GetKey (KeyCode.Space) || Input.touchCount > 0)
-        {
-			wheel.useMotor = true;
-            _currentSpeed += speedAcceleration * Time.deltaTime;
-            _currentSpeed = Mathf.Clamp(_currentSpeed, targetSpeed, 0f);
-			_wheelMotor.motorSpeed = _currentSpeed;
-			wheel.motor = _wheelMotor;
-		}
-        else
-        {
-			
-		}*/
+        RaceManager.StartRaceEvent -= UnFreeze;
+        RaceManager.PauseRaceEvent -= Freeze;
+        RaceManager.EndRaceEvent -= EndRace;
+    }
 
-        _addForce = false;
-        wheel.useMotor = false;
-
-       
-        // Accelerate/back flip
-        if (Input.GetKey (KeyCode.D) || IsScreenSectionTouched(Screen.width/2, Screen.width))
+    // Update is called once per frame
+    void Update ()
+    {
+        if (!_paused)
         {
-            _force = -this.transform.up * maxRotationForce;
-            _forceLocation = this.transform.position - (transform.position-back.position);
-            _addForce = true;
-            wheel.useMotor = true;
-            _currentSpeed += speedAcceleration * Time.deltaTime;
-            _currentSpeed = Mathf.Clamp(_currentSpeed, targetSpeed, 0f);
-            _wheelMotor.motorSpeed = _currentSpeed;
-            wheel.motor = _wheelMotor;
+            _addForce = false;
+            wheel.useMotor = false;
 
-        }
-        // Break/front flip overrides acceleration
-        if (Input.GetKey(KeyCode.A) || IsScreenSectionTouched(0, Screen.width/2))
-        {
-            _force = -this.transform.up * maxRotationForce;
-            _forceLocation = this.transform.position - (transform.position - front.position);
-            Debug.Log("FORCE: " + _force.ToString());
-            Debug.Log("FORCE LOCATION: " + _forceLocation.ToString());
-            _addForce = true;
-            wheel.useMotor = true;
-            _wheelMotor.motorSpeed = 0;
-            wheel.motor = _wheelMotor;
 
+            // Accelerate/back flip
+            if (Input.GetKey(KeyCode.D) || IsScreenSectionTouched(Screen.width / 2, Screen.width))
+            {
+                _force = -this.transform.up * maxRotationForce;
+                _forceLocation = this.transform.position - (transform.position - back.position);
+                _addForce = true;
+                wheel.useMotor = true;
+                _currentSpeed += speedAcceleration * Time.deltaTime;
+                _currentSpeed = Mathf.Clamp(_currentSpeed, targetSpeed, 0f);
+                _wheelMotor.motorSpeed = _currentSpeed;
+                wheel.motor = _wheelMotor;
+
+            }
+            // Break/front flip overrides acceleration
+            if (Input.GetKey(KeyCode.A) || IsScreenSectionTouched(0, Screen.width / 2))
+            {
+                _force = -this.transform.up * maxRotationForce;
+                _forceLocation = this.transform.position - (transform.position - front.position);
+                Debug.Log("FORCE: " + _force.ToString());
+                Debug.Log("FORCE LOCATION: " + _forceLocation.ToString());
+                _addForce = true;
+                wheel.useMotor = true;
+                _wheelMotor.motorSpeed = 0;
+                wheel.motor = _wheelMotor;
+
+            }
         }
     }
 
@@ -100,6 +102,18 @@ public class PlayerController : MonoBehaviour
     public void Freeze()
     {
         _rgbd.constraints = RigidbodyConstraints2D.FreezeAll;
+        _paused = true;
+    }
+
+    public void UnFreeze()
+    {
+        _rgbd.constraints = RigidbodyConstraints2D.None;
+        _paused = false;
+    }
+
+    public void EndRace(bool c)
+    {
+        Freeze();
     }
 
 }

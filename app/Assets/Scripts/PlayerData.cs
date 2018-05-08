@@ -17,11 +17,42 @@ public class PlayerData
     public bool BestTimeDataToUpload { get; set; }
     public bool PlayerDataHasBeenCreated { get; set; }
 
+    // First time startup stuff
+    public bool DisplayGetName { get; set; }
+    public bool DisplayGameplayTutorial { get; set; }
+
+    // Events
+    [field: NonSerialized]
+    public event Action<string> PlayerNameChange;
+    [field: NonSerialized]
+    public event Action<int> PlayerPointsChange;
+
     public PlayerData()
     {
+        DisplayGetName = true;
+        DisplayGameplayTutorial = true;
         SetupData();
     }
 
+    public void SetPlayerNameChangeWithEvent(string name)
+    {
+        if (PlayerNameChange != null)
+        {
+            PlayerNameChange(name);
+        }
+        Name = name;
+    }
+
+    public void SetPlayerPointsWithEvent(int points)
+    {
+        if (PlayerPointsChange != null)
+        {
+            PlayerPointsChange(points);
+        }
+        Points = points;
+    }
+
+    // Set all default null values. Mainly used to easily update the save file
     public void SetupData()
     {
         if (itemsPurchased == null)

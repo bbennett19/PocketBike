@@ -102,11 +102,11 @@ public class HTTPRequestHandler : MonoBehaviour
         }
     }
 
-    public IEnumerator UpdatePlayerBestTime(string id, float time, BasicHTTPDelegate callback)
+    public IEnumerator UpdatePlayerBestTime(string playerID, string levelID, float time, BasicHTTPDelegate callback)
     {
         WWWForm postData = new WWWForm();
         postData.AddField("time", time.ToString());
-        UnityWebRequest www = UnityWebRequest.Post(url + "/api/best_time/" + id, postData);
+        UnityWebRequest www = UnityWebRequest.Post(url + "/api/best_time/" + playerID + "/" + levelID, postData);
 
         yield return www.SendWebRequest();
 

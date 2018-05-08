@@ -6,12 +6,22 @@ using UnityEngine.UI;
 public class Timer : MonoBehaviour
 {
     public Text timerText;
-    private float _elapsed;
-    private bool _running = true;
+    private float _elapsed = 0f;
+    private bool _running = false;
 
     private void Start()
     {
         timerText.text = _elapsed.ToString("0.00");
+        RaceManager.StartRaceEvent += StartRace;
+        RaceManager.PauseRaceEvent += Stop;
+        RaceManager.EndRaceEvent += EndRace;
+    }
+
+    private void OnDestroy()
+    {
+        RaceManager.StartRaceEvent -= StartRace;
+        RaceManager.PauseRaceEvent -= Stop;
+        RaceManager.EndRaceEvent -= EndRace;
     }
 
     // Update is called once per frame
@@ -28,5 +38,20 @@ public class Timer : MonoBehaviour
     public void Stop()
     {
         _running = false;
+    }
+
+    public void EndRace(bool c)
+    {
+        Stop();
+    }
+
+    public void StartRace()
+    {
+        _running = true;
+    }
+
+    public float GetTimer()
+    {
+        return _elapsed;
     }
 }

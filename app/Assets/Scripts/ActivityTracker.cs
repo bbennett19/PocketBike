@@ -6,21 +6,25 @@ using UnityEngine.UI;
 public class ActivityTracker : MonoBehaviour
 {
     public Text distanceText;
+    public Text distanceSpeedText;
 	public Text latText;
 	public Text lonText;
+    public Text speedText;
     public Text updateText;
     public Text pointsText;
     public Text errorText;
     public Button collectButton;
-    public UIUpdater uiUpdater;
     public GPSLocationUpdateConsumer gpsLocationConsumer;
+    public Transform modalParent;
+    public GameObject noInternetModalPanel;
 
-    private GPSLocation lastLoc = new GPSLocation(0,0);
+    private GPSLocation lastLoc = new GPSLocation(0,0,0);
     private bool gotLocation = false;
     private int updateCount = 0;
     private float elapsed = 0f;
+    private double distSpeed = 0f;
 
-#if UNITY_ANDROID
+#if !UNITY_EDITOR
     private AndroidJavaClass _serviceLauncher;
 #endif
 
@@ -39,7 +43,7 @@ public class ActivityTracker : MonoBehaviour
 
     private void LaunchGPSService()
     {
-#if UNITY_ANDROID 
+#if !UNITY_EDITOR 
 
         if (Input.location.isEnabledByUser)
         {
@@ -66,7 +70,7 @@ public class ActivityTracker : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-#if UNITY_ANDROID
+#if !UNITY_EDITOR
         gpsLocationConsumer.OnLocationUpdate -= UpdateLocation;
         _serviceLauncher.CallStatic("stopService");
 #endif
@@ -82,6 +86,8 @@ public class ActivityTracker : MonoBehaviour
             updateText.text = "Update: " + updateCount.ToString();
             latText.text = "Lat: " + location.Latitude.ToString();
             lonText.text = "Lon: " + location.Longitude.ToString();
+            speedText.text = "Speed: " + location.Speed.ToString();
+
             if (!gotLocation)
             {
                 lastLoc = location;
@@ -89,7 +95,8 @@ public class ActivityTracker : MonoBehaviour
             }
             else
             {
-
+                distSpeed += CalcDistanceSpeed(lastLoc, location);
+                distanceSpeedText.text = "DistanceS: " + distSpeed.ToString("0.00");
                 PlayerPointsAndItems.Instance.playerData.GeneratedDistance += CalcDistance(lastLoc, location);
                 lastLoc = location;
                 PlayerPointsAndItems.Instance.playerData.GeneratedPoints = (int)(PlayerPointsAndItems.Instance.playerData.GeneratedDistance * 100);
@@ -159,6 +166,13 @@ public class ActivityTracker : MonoBehaviour
         return 3959.0 * c;
     }
 
+    private double CalcDistanceSpeed(GPSLocation loc1, GPSLocation loc2)
+    {
+        TimeSpan elapsed = loc2.Timestamp.Subtract(loc1.Timestamp);
+        return (elapsed.Milliseconds / 1000.0) * loc2.Speed * 0.00062137;
+
+    }
+
     private double DegToRad(double deg)
     {
         return deg * Mathf.Deg2Rad;
@@ -169,7 +183,15 @@ public class ActivityTracker : MonoBehaviour
         string name = PlayerPointsAndItems.Instance.playerData.Name;
         int newPoints = PlayerPointsAndItems.Instance.playerData.GetTotalPoints();
         double newDistance = PlayerPointsAndItems.Instance.playerData.GetTotalDistance();
-        StartCoroutine(HTTPRequestHandler.Instance.UpdatePlayerData(SystemInfo.deviceUniqueIdentifier, name, newPoints, newDistance, AddPointsCallback));
+
+        if (!PlayerPointsAndItems.Instance.playerData.PlayerDataHasBeenCreated)
+        {
+            StartCoroutine(HTTPRequestHandler.Instance.CreatePlayerData(SystemInfo.deviceUniqueIdentifier, name, CreatePlayerCallback));
+        }
+        else
+        {
+            StartCoroutine(HTTPRequestHandler.Instance.UpdatePlayerData(SystemInfo.deviceUniqueIdentifier, name, newPoints, newDistance, AddPointsCallback));
+        }
     }
 
     public void AddPointsCallback(bool networkError, bool success)
@@ -177,17 +199,37 @@ public class ActivityTracker : MonoBehaviour
         if(success)
         {
             // Add points and total distance
-            PlayerPointsAndItems.Instance.playerData.Points += PlayerPointsAndItems.Instance.playerData.GeneratedPoints;
+            int points = PlayerPointsAndItems.Instance.playerData.Points + PlayerPointsAndItems.Instance.playerData.GeneratedPoints;
+            PlayerPointsAndItems.Instance.playerData.SetPlayerPointsWithEvent(points);
             PlayerPointsAndItems.Instance.playerData.DistanceTraveled += PlayerPointsAndItems.Instance.playerData.GeneratedDistance;
             PlayerPointsAndItems.Instance.playerData.GeneratedPoints = 0;
             PlayerPointsAndItems.Instance.playerData.GeneratedDistance = 0.0;
+            PlayerPointsAndItems.Instance.playerData.PlayerDataToUpload = false;
             collectButton.interactable = false;
             SetTextFields();
-            uiUpdater.UpdateText();
         }
         if(networkError || !success)
         {
-            Debug.Log("Add points error");
+            GameObject g = Instantiate(noInternetModalPanel, modalParent);
+            g.GetComponent<BasicModalPanel>().SetTextToDisplay("Unable to connect to the server. Internet connection required to collect points. Please try again later.");
+
+        }
+    }
+
+    public void CreatePlayerCallback(bool networkError, bool success)
+    {
+        if (success)
+        {
+            // Add points and total distance
+            PlayerPointsAndItems.Instance.playerData.PlayerDataHasBeenCreated = true;
+            PlayerPointsAndItems.Instance.playerData.PlayerDataToUpload = false;
+            CollectPoints();
+        }
+        if (networkError || !success)
+        {
+            GameObject g = Instantiate(noInternetModalPanel, modalParent);
+            g.GetComponent<BasicModalPanel>().SetTextToDisplay("Unable to connect to the server. Internet connection required to collect points. Please try again later.");
+
         }
     }
 
