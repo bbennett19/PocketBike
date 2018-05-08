@@ -12,15 +12,17 @@ public class Timer : MonoBehaviour
     private void Start()
     {
         timerText.text = _elapsed.ToString("0.00");
-        RaceManager.StartRaceEvent += StartRace;
+        RaceManager.StartRaceEvent += StartTimer;
         RaceManager.PauseRaceEvent += Stop;
+		RaceManager.ResumeRaceEvent += StartTimer;
         RaceManager.EndRaceEvent += EndRace;
     }
 
     private void OnDestroy()
     {
-        RaceManager.StartRaceEvent -= StartRace;
+        RaceManager.StartRaceEvent -= StartTimer;
         RaceManager.PauseRaceEvent -= Stop;
+		RaceManager.ResumeRaceEvent -= StartTimer;
         RaceManager.EndRaceEvent -= EndRace;
     }
 
@@ -45,7 +47,7 @@ public class Timer : MonoBehaviour
         Stop();
     }
 
-    public void StartRace()
+    public void StartTimer()
     {
         _running = true;
     }

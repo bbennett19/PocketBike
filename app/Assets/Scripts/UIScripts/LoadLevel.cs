@@ -5,9 +5,9 @@ using UnityEngine.SceneManagement;
 
 public class LoadLevel : MonoBehaviour
 {
-
 	public void LoadLevelClick(int levelID)
     {
-        SceneManager.LoadScene(levelID);
+		LevelSelectionData.Instance.LevelID = levelID;
+		SceneManager.LoadScene("race_main");
     }
 }

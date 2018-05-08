@@ -6,6 +6,7 @@ using UnityEngine;
 public class RaceManager : MonoBehaviour {
     public static event Action StartRaceEvent;
     public static event Action PauseRaceEvent;
+	public static event Action ResumeRaceEvent;
     public static event Action<bool> EndRaceEvent;
 
 	public static void StartRace()
@@ -23,6 +24,13 @@ public class RaceManager : MonoBehaviour {
             PauseRaceEvent();
         }
     }
+
+	public static void ResumeRace()
+	{
+		if (ResumeRaceEvent != null) {
+			ResumeRaceEvent ();
+		}
+	}
 
     public static void EndRace(bool crash)
     {

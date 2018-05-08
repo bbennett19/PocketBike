@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
         Freeze();
         RaceManager.StartRaceEvent += UnFreeze;
         RaceManager.PauseRaceEvent += Freeze;
+		RaceManager.ResumeRaceEvent += UnFreeze;
         RaceManager.EndRaceEvent += EndRace;
 	}
 
@@ -34,6 +35,7 @@ public class PlayerController : MonoBehaviour
     {
         RaceManager.StartRaceEvent -= UnFreeze;
         RaceManager.PauseRaceEvent -= Freeze;
+		RaceManager.ResumeRaceEvent -= UnFreeze;
         RaceManager.EndRaceEvent -= EndRace;
     }
 

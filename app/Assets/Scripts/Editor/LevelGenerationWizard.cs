@@ -49,7 +49,7 @@ public class LevelGenerationWizard : ScriptableWizard
         float height = heightMultiplier * Mathf.PerlinNoise(perlinInitialXValue, perlinInitialYValue);
         // Create inital first two points
         verts[0] = new Vector3(worldspaceInitialXValue, worldspaceInitialYValue, 0);
-        verts[1] = new Vector3(worldspaceInitialXValue, height, 0);
+        verts[1] = new Vector3(worldspaceInitialXValue, worldspaceInitialYValue+height, 0);
 
         // Add both vertices to the collider path
         colliderPath.Add(verts[0]);
@@ -65,9 +65,11 @@ public class LevelGenerationWizard : ScriptableWizard
         for (int i = 0; i < numBlocks; i++)
         {
             // Create two new verties for this block (two verts from previous block will be reused)
+			float xVal = (i+1)*worldspaceXStep;
+			float yVal = worldspaceInitialYValue + ((i + 1) * worldspaceYStep);
             height = heightMultiplier * Mathf.PerlinNoise(perlinInitialXValue + ((i + 1) * perlinXStep), perlinInitialYValue + ((i + 1) * perlinYStep));
-            verts[(i * 2) + 2] = new Vector3((i + 1) * worldspaceXStep, worldspaceInitialYValue, 0);
-            verts[(i * 2) + 3] = new Vector3((i + 1) * worldspaceXStep, height, 0);
+            verts[(i * 2) + 2] = new Vector3(xVal, yVal, 0);
+            verts[(i * 2) + 3] = new Vector3(xVal, yVal+height, 0);
 
             // Add the top vertex to the collider path
             colliderPath.Add(verts[(i * 2) + 3]);
