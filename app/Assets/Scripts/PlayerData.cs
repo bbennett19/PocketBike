@@ -8,6 +8,7 @@ public class PlayerData
 {
     public float[] bestTimes;
     public bool[] bestTimeDataToUpload;
+	public DateTime[] levelUnlockTime;
     public string Name { get; set; }
     public int Points { get; set; }
     public int GeneratedPoints { get; set; }
@@ -57,6 +58,9 @@ public class PlayerData
     // Set all default null values. Mainly used to easily update the save file
     public void SetupData()
     {
+		if (levelUnlockTime == null) {
+			levelUnlockTime = new DateTime[3];
+		}
         if (bestTimes == null)
         {
             bestTimes = new float[3];
