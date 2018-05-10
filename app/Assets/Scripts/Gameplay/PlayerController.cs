@@ -66,14 +66,20 @@ public class PlayerController : MonoBehaviour
             {
                 _force = -this.transform.up * maxRotationForce;
                 _forceLocation = this.transform.position - (transform.position - front.position);
-                Debug.Log("FORCE: " + _force.ToString());
-                Debug.Log("FORCE LOCATION: " + _forceLocation.ToString());
                 _addForce = true;
                 wheel.useMotor = true;
                 _wheelMotor.motorSpeed = 0;
                 wheel.motor = _wheelMotor;
 
             }
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if(collision.gameObject.CompareTag("ground"))
+        {
+            RaceManager.EndRace(true);
         }
     }
 

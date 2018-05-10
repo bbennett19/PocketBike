@@ -112,44 +112,7 @@ public class ActivityTracker : MonoBehaviour
 
     private void Update()
     {
-        elapsed += Time.deltaTime;
 
-        if(elapsed >= 5f)
-        {
-            //errorText.text = _serviceLauncher.CallStatic<int>("queryUpdateCount").ToString()+":"+_androidGPSCallback.test.ToString();
-            //_serviceLauncher.CallStatic("test");
-            elapsed = 0f;
-            //updateText.text = _androidGPSCallback.test.ToString();
-
-            //latText.text = "Lat: "+_androidGPSCallback.lastLat.ToString();
-            //lonText.text = "Lon: " + _androidGPSCallback.lastLon.ToString();
-
-        }
-		/*if(Input.location.status == LocationServiceStatus.Running && 
-			(Input.location.lastData.latitude != lastLoc.latitude || Input.location.lastData.longitude != lastLoc.longitude))
-        {
-			latText.text = "Lat: " + Input.location.lastData.latitude.ToString ();
-			lonText.text = "Lon: " + Input.location.lastData.longitude.ToString ();
-            if(!gotLocation)
-            {
-                lastLoc = Input.location.lastData;
-                gotLocation = true;
-            }
-            else
-            {
-                updateCount++;
-                updateText.text = "Update: " + updateCount.ToString();
-                PlayerPointsAndItems.Instance.playerData.GeneratedDistance += CalcDistance(lastLoc, Input.location.lastData);
-				lastLoc = Input.location.lastData;
-                PlayerPointsAndItems.Instance.playerData.GeneratedPoints = (int)(PlayerPointsAndItems.Instance.playerData.GeneratedDistance * 100);
-                SetTextFields();
-
-                if(PlayerPointsAndItems.Instance.playerData.GeneratedPoints > 0)
-                {
-                    collectButton.interactable = true;
-                }
-            }
-        }*/
     }
 
     private double CalcDistance(GPSLocation loc1, GPSLocation loc2)
@@ -180,57 +143,30 @@ public class ActivityTracker : MonoBehaviour
 
     public void CollectPoints()
     {
-        string name = PlayerPointsAndItems.Instance.playerData.Name;
-        int newPoints = PlayerPointsAndItems.Instance.playerData.GetTotalPoints();
-        double newDistance = PlayerPointsAndItems.Instance.playerData.GetTotalDistance();
-
-        if (!PlayerPointsAndItems.Instance.playerData.PlayerDataHasBeenCreated)
-        {
-            StartCoroutine(HTTPRequestHandler.Instance.CreatePlayerData(SystemInfo.deviceUniqueIdentifier, name, CreatePlayerCallback));
-        }
-        else
-        {
-            StartCoroutine(HTTPRequestHandler.Instance.UpdatePlayerData(SystemInfo.deviceUniqueIdentifier, name, newPoints, newDistance, AddPointsCallback));
-        }
+        Debug.Log("Collect");
+        NetworkOperations.Instance.UpdatePlayerData(AddPointsStatus, true);
+        collectButton.interactable = false;
     }
 
-    public void AddPointsCallback(bool networkError, bool success)
+    public void AddPointsStatus(bool success)
     {
         if(success)
         {
-            // Add points and total distance
-            int points = PlayerPointsAndItems.Instance.playerData.Points + PlayerPointsAndItems.Instance.playerData.GeneratedPoints;
-            PlayerPointsAndItems.Instance.playerData.SetPlayerPointsWithEvent(points);
-            PlayerPointsAndItems.Instance.playerData.DistanceTraveled += PlayerPointsAndItems.Instance.playerData.GeneratedDistance;
+            Debug.Log("Collect Success");
+            PlayerPointsAndItems.Instance.playerData.DistanceTraveled = PlayerPointsAndItems.Instance.playerData.GetTotalDistance();
+            PlayerPointsAndItems.Instance.playerData.GeneratedDistance = 0f;
+            PlayerPointsAndItems.Instance.playerData.SetPlayerPointsWithEvent(PlayerPointsAndItems.Instance.playerData.GetTotalPoints());
             PlayerPointsAndItems.Instance.playerData.GeneratedPoints = 0;
-            PlayerPointsAndItems.Instance.playerData.GeneratedDistance = 0.0;
-            PlayerPointsAndItems.Instance.playerData.PlayerDataToUpload = false;
-            collectButton.interactable = false;
             SetTextFields();
         }
-        if(networkError || !success)
+        else
         {
+            Debug.Log("Collect Fail");
+            // Display network error
             GameObject g = Instantiate(noInternetModalPanel, modalParent);
             g.GetComponent<BasicModalPanel>().SetTextToDisplay("Unable to connect to the server. Internet connection required to collect points. Please try again later.");
-
         }
-    }
-
-    public void CreatePlayerCallback(bool networkError, bool success)
-    {
-        if (success)
-        {
-            // Add points and total distance
-            PlayerPointsAndItems.Instance.playerData.PlayerDataHasBeenCreated = true;
-            PlayerPointsAndItems.Instance.playerData.PlayerDataToUpload = false;
-            CollectPoints();
-        }
-        if (networkError || !success)
-        {
-            GameObject g = Instantiate(noInternetModalPanel, modalParent);
-            g.GetComponent<BasicModalPanel>().SetTextToDisplay("Unable to connect to the server. Internet connection required to collect points. Please try again later.");
-
-        }
+        collectButton.interactable = true;
     }
 
     public void ResetData()

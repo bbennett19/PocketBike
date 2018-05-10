@@ -23,34 +23,7 @@ public class EndRacePanel : MonoBehaviour
         RaceManager.EndRaceEvent -= RaceEnd;
     }
 
-    public void UpdateTextFields(bool crash, float time)
-    {
-        idText.text = "";
-        timeText.text = "";
-
-        if (crash)
-        {
-            idText.text = "Crash!";
-        }
-        float currentBestTime = PlayerPointsAndItems.Instance.playerData.bestTimes[0];
-
-        if (time < currentBestTime)
-        {
-            idText.text = "New Best Time!";
-        }
-        else
-        {
-            idText.text = "Better Luck Next Time";
-        }
-
-        if (!crash)
-        { 
-            timeText.text = "Time: " + time.ToString("0.00");
-        }
-        bestTimeText.text = "Best Time: " + PlayerPointsAndItems.Instance.playerData.bestTimes[0].ToString("0.00");
-    }
-
-    public void UpdateTimeCallback(bool networkError, bool success)
+    public void UpdateTimeCallback(bool success)
     {
         playAgain.interactable = true;
         goBack.interactable = true;
@@ -58,21 +31,55 @@ public class EndRacePanel : MonoBehaviour
 
     public void RaceEnd(bool crash)
     {
-        float time = timer.GetTimer();
-        UpdateTextFields(crash, time);
-        gameObject.SetActive(true);
-
-        if (time < PlayerPointsAndItems.Instance.playerData.bestTimes[0])
+        // Sometimes collisions are triggered twice forcing this to be called two time
+        // Only perform actions if the game object is not active
+        if (!gameObject.activeSelf)
         {
-            PlayerPointsAndItems.Instance.playerData.bestTimes[0] = time;
-
-            // Upload new best time
-            // Disable buttons until network operation is complete
+            Debug.Log(crash);
+            float time = timer.GetTimer();
+            bool uploadScore = false;
             playAgain.interactable = false;
             goBack.interactable = false;
-            StartCoroutine(HTTPRequestHandler.Instance.UpdatePlayerBestTime(SystemInfo.deviceUniqueIdentifier, 0.ToString(), time, UpdateTimeCallback));
+
+            if (time < PlayerPointsAndItems.Instance.playerData.bestTimes[LevelSelectionData.Instance.LevelID] && !crash)
+            {
+                PlayerPointsAndItems.Instance.playerData.bestTimes[LevelSelectionData.Instance.LevelID] = time;
+                PlayerPointsAndItems.Instance.playerData.bestTimeDataToUpload[LevelSelectionData.Instance.LevelID] = true;
+                idText.text = "New Best Time!";
+                timeText.text = "Time: " + time.ToString("0.00");
+                bestTimeText.text = "Best Time: " + PlayerPointsAndItems.Instance.playerData.bestTimes[LevelSelectionData.Instance.LevelID].ToString("0.00");
+                uploadScore = true;
+
+            }
+            else if (crash)
+            {
+                idText.text = "Crash!";
+                timeText.text = "Time: -:--";
+                bestTimeText.text = "Best Time: " + PlayerPointsAndItems.Instance.playerData.bestTimes[LevelSelectionData.Instance.LevelID].ToString("0.00");
+            }
+            else
+            {
+                idText.text = "Better Luck Next Time";
+                timeText.text = "Time: " + time.ToString("0.00");
+                bestTimeText.text = "Best Time: " + PlayerPointsAndItems.Instance.playerData.bestTimes[LevelSelectionData.Instance.LevelID].ToString("0.00");
+            }
+
+            gameObject.SetActive(true);
+
+            if (uploadScore)
+            {
+                // Upload new best time
+                NetworkOperations.Instance.UpdatePlayerData(UpdateTimeCallback);
+            }
+            else
+            {
+                playAgain.interactable = true;
+                goBack.interactable = true;
+            }
         }
     }
 
-    
+
+
+
 }

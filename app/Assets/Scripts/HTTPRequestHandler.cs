@@ -5,28 +5,13 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
-public class HTTPRequestHandler : MonoBehaviour
-{
+public class HTTPRequestHandler
+{ 
     private const String HTTP_REQUEST_EMPTY = "[]";
     private string url = "http://ix-dev.cs.uoregon.edu:12355";
     // Callback delegate functions
     public delegate void ReturnDataHTTPDelegate(bool networkError, bool success, string jsonString);
     public delegate void BasicHTTPDelegate(bool networkError, bool success);
-
-    public static HTTPRequestHandler Instance;
-
-    void Awake()
-    {
-        if (Instance == null)
-        {
-            DontDestroyOnLoad(gameObject);
-            Instance = this;
-        }
-        else if (Instance != this)
-        {
-            Destroy(gameObject);
-        }
-    }
 
     public IEnumerator GetPlayerData(string id, ReturnDataHTTPDelegate callback)
     {

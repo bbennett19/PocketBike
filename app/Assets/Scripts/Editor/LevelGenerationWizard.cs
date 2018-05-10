@@ -13,9 +13,10 @@ public class LevelGenerationWizard : ScriptableWizard
     public float perlinYStep = 0f;
     public float worldspaceInitialXValue = 0f;
     public float worldspaceXStep = 0.5f;
-    public float worldspaceInitialYValue = -5f;
+    public float worldspaceInitialYValue = 0f;
+    public float worldspaceYFloorValue = -10f;
     public float worldspaceYStep = 0f;
-    public float heightMultiplier = 5f;
+    public float noiseMultiplier = 5f;
 
     [MenuItem("Level Tools/Create Level Wizard...")]
     static void CreateLevelWizard()
@@ -46,9 +47,9 @@ public class LevelGenerationWizard : ScriptableWizard
         int[] tris = new int[numBlocks * 6];
         Vector3[] normals = new Vector3[(numBlocks + 1) * 2];
         Vector2[] uvs = new Vector2[(numBlocks + 1) * 2];
-        float height = heightMultiplier * Mathf.PerlinNoise(perlinInitialXValue, perlinInitialYValue);
+        float height = noiseMultiplier * Mathf.PerlinNoise(perlinInitialXValue, perlinInitialYValue);
         // Create inital first two points
-        verts[0] = new Vector3(worldspaceInitialXValue, worldspaceInitialYValue, 0);
+        verts[0] = new Vector3(worldspaceInitialXValue, worldspaceYFloorValue, 0);
         verts[1] = new Vector3(worldspaceInitialXValue, worldspaceInitialYValue+height, 0);
 
         // Add both vertices to the collider path
@@ -67,8 +68,9 @@ public class LevelGenerationWizard : ScriptableWizard
             // Create two new verties for this block (two verts from previous block will be reused)
 			float xVal = (i+1)*worldspaceXStep;
 			float yVal = worldspaceInitialYValue + ((i + 1) * worldspaceYStep);
-            height = heightMultiplier * Mathf.PerlinNoise(perlinInitialXValue + ((i + 1) * perlinXStep), perlinInitialYValue + ((i + 1) * perlinYStep));
-            verts[(i * 2) + 2] = new Vector3(xVal, yVal, 0);
+            float yFloor = worldspaceYFloorValue + ((i + 1) * worldspaceYStep);
+            height = noiseMultiplier * Mathf.PerlinNoise(perlinInitialXValue + ((i + 1) * perlinXStep), perlinInitialYValue + ((i + 1) * perlinYStep));
+            verts[(i * 2) + 2] = new Vector3(xVal, yFloor, 0);
             verts[(i * 2) + 3] = new Vector3(xVal, yVal+height, 0);
 
             // Add the top vertex to the collider path

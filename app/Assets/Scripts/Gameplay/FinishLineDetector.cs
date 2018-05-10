@@ -7,6 +7,9 @@ public class FinishLineDetector : MonoBehaviour
 {
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        RaceManager.EndRace(false);
+        if (collision.gameObject.CompareTag("finish"))
+        {
+            RaceManager.EndRace(false);
+        }
     }
 }

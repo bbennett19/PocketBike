@@ -21,39 +21,13 @@ public class NewPlayerModalPanel : MonoBehaviour
         PlayerPointsAndItems.Instance.playerData.PlayerDataToUpload = true;
         PlayerPointsAndItems.Instance.playerData.DisplayGetName = false;
         PlayerPointsAndItems.Instance.playerData.PlayerDataHasBeenCreated = false;
-        StartCoroutine(HTTPRequestHandler.Instance.CreatePlayerData(SystemInfo.deviceUniqueIdentifier, inputText.text, CreatePlayerDataCallback));
+        submitButton.interactable = false;
+        NetworkOperations.Instance.UpdatePlayerData(UpdatePlayerDataCallback);
     }
 
-    public void CreatePlayerDataCallback(bool networkError, bool success)
+    public void UpdatePlayerDataCallback(bool success)
     {
-        if (success)
-        {
-            PlayerPointsAndItems.Instance.playerData.PlayerDataToUpload = false;
-            PlayerPointsAndItems.Instance.playerData.PlayerDataHasBeenCreated = true;
-            gameObject.SetActive(false);
-        }
-        else if (!networkError && !success)
-        {
-            PlayerPointsAndItems.Instance.playerData.PlayerDataHasBeenCreated = true;
-
-            // Player must have already existed on the server, update data instead of create
-            StartCoroutine(HTTPRequestHandler.Instance.UpdatePlayerData(SystemInfo.deviceUniqueIdentifier, inputText.text, 
-                PlayerPointsAndItems.Instance.playerData.Points, PlayerPointsAndItems.Instance.playerData.DistanceTraveled, UpdatePlayerDataCallback));
-        }
-        else
-        {
-            Destroy(this.gameObject);
-        }
-    }
-
-    public void UpdatePlayerDataCallback(bool networkError, bool success)
-    {
-        if(success)
-        {
-            PlayerPointsAndItems.Instance.playerData.PlayerDataToUpload = false;
-        }
         Destroy(this.gameObject);
-        
     }
 
     public void ValueChange(string value)

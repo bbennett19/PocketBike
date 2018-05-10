@@ -4,43 +4,35 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-[Serializable]
-public class BestTimeDataList
-{
-    public List<BestTimeData> times;
-}
-
-[Serializable]
-public class BestTimeData
-{
-    public string PLAYER_id;
-    public string name;
-    public double time;
-}
-
 
 public class Leaderboard : MonoBehaviour
 {
     public GameObject leaderboardLinePrefab;
+    private int _currentLevelID;
 
-    private void Awake()
+    private void ChangeLeaderboard(int levelID)
     {
-        StartCoroutine(HTTPRequestHandler.Instance.GetBestTimes(0, GetHighScoreCallback));
+        if(_currentLevelID != levelID)
+        {
+            _currentLevelID = levelID;
+            NetworkOperations.Instance.GetHighScores(GetHighScoreCallback, levelID);
+        }
     }
 
-    public void GetHighScoreCallback(bool networkError, bool success, string jsonData)
+    public void GetHighScoreCallback(bool success, List<BestTimeData> data)
     {
         if(success)
         {
-            Debug.Log("{times:"+jsonData+"}");
-            BestTimeDataList highScores = JsonUtility.FromJson<BestTimeDataList>("{\"times\":" + jsonData + "}");
-
             int place = 1;
-            foreach(BestTimeData data in highScores.times)
+            foreach(BestTimeData item in data)
             {
                 GameObject line = Instantiate(leaderboardLinePrefab, this.transform);
-                line.GetComponent<LeaderboardElement>().SetFields(data.PLAYER_id, place++, data.name, data.time);
+                line.GetComponent<LeaderboardElement>().SetFields(item.PLAYER_id, place++, item.name, item.time);
             }
+        }
+        else
+        {
+            // Display network error
         }
     }
 }

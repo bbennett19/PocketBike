@@ -59,8 +59,6 @@ public class PlayerPointsAndItems : MonoBehaviour
             playerData = bf.Deserialize(file) as PlayerData;
             playerData.SetupData();
             file.Close();
-
-            CheckForDataToUpload();
         }
     }
 
@@ -77,57 +75,5 @@ public class PlayerPointsAndItems : MonoBehaviour
         int num = (int)(UnityEngine.Random.value * 10000);
         return "Guest_" + num.ToString();
     }
-
-    public void CheckForDataToUpload()
-    {
-        if (!playerData.PlayerDataHasBeenCreated)
-        {
-            StartCoroutine(HTTPRequestHandler.Instance.CreatePlayerData(SystemInfo.deviceUniqueIdentifier, playerData.Name, CreatePlayerDataCallback));
-        }
-        else if(playerData.PlayerDataToUpload)
-        {
-            StartCoroutine(HTTPRequestHandler.Instance.UpdatePlayerData(SystemInfo.deviceUniqueIdentifier, playerData.Name, playerData.Points, playerData.DistanceTraveled, UpdatePlayerDataCallback));
-        }
-    }
-
-    public void GetPlayerDataCallback(bool networkError, bool success, string jsonString)
-    {
-        if(networkError)
-        {
-            Debug.Log("Network error");
-        }
-        else if(!success)
-        {
-            // Create player data
-            StartCoroutine(HTTPRequestHandler.Instance.CreatePlayerData(SystemInfo.deviceUniqueIdentifier, GeneratePlayerName(), CreatePlayerDataCallback));
-        }
-        else
-        {
-            Debug.Log(jsonString);
-        }
-    }
-
-    public void CreatePlayerDataCallback(bool networkError, bool success)
-    {
-        if(success)
-        {
-            playerData.PlayerDataHasBeenCreated = true;
-
-            if(playerData.PlayerDataToUpload)
-            {
-                StartCoroutine(HTTPRequestHandler.Instance.UpdatePlayerData(SystemInfo.deviceUniqueIdentifier, playerData.Name, playerData.Points, playerData.DistanceTraveled, UpdatePlayerDataCallback));
-            }
-        }
-    }
-
-    public void UpdatePlayerDataCallback(bool networkError, bool success)
-    {
-        if(success)
-        {
-            playerData.PlayerDataToUpload = false;
-        }
-    }
-
-
 }
 

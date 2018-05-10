@@ -41,18 +41,18 @@ router.route('/player/create')
       return res.json({message: "undefined values"})
     }
     else {
-      var error = false;
       var sql = mysql.format("INSERT INTO player (PLAYER_id, name, points, distance)\
                               VALUES(?, ?, 0, 0.0)", [player_id, player_name]);
 
       // Database stuff. First add player to PLAYER, then add info to BEST_TIME
       connection.query(sql, function(err, result, fields){
         if(err) {
-          error = true;
           return next(err);
         }
         sql = mysql.format("INSERT INTO best_time (level_id, time, PLAYER_id, timestamp)\
-                            VALUES(0, 99.99, ?, now())", [player_id]);
+                            VALUES (0, 99.9999, ?, now()),\
+                             (1, 99.9999, ?, now()),\
+                             (2, 99.9999, ?, now());", [player_id, player_id, player_id]);
         connection.query(sql, function(err, result, fields){
           if(err) {
             return next(err);
@@ -91,10 +91,6 @@ router.route('/player/:player_id')
                             WHERE PLAYER_id=?", [player_name,points,distance,player_id]);
     connection.query(sql, function(err, result, fields){
       if(err) return next(err);
-      if(result.affectedRows == 0) {
-        console.log("No rows for " + player_id);
-        return next(new Error());
-      }
       res.json(result);
     });
   });
@@ -125,7 +121,7 @@ router.route('/best_time/:level_id')
   // Distance high score list
   if(level_id == -1)
   {
-    var sql = "SELECT PLAYER_id, name, distance\
+    var sql = "SELECT PLAYER_id, name, distance as time\
                FROM player\
                ORDER BY distance DESC"
      connection.query(sql, function(err, result, fields){
