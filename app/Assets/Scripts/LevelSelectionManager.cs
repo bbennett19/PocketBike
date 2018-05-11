@@ -11,8 +11,11 @@ public class LevelSelectionManager : MonoBehaviour {
 	public Text timeText;
 	public int levelID;
 	public int unlockCost;
-	public TimeSpan unlockTime = new TimeSpan(0, 5, 0);
+	public TimeSpan unlockTime = new TimeSpan(12, 0, 0);
+    public GameObject basicModalPrefab;
+    public Transform parent;
 	private bool _levelUnlocked = false;
+    
 
 	void Awake()
 	{
@@ -51,7 +54,9 @@ public class LevelSelectionManager : MonoBehaviour {
 			unlockButton.interactable = false;
 			NetworkOperations.Instance.UpdatePlayerData (UpdateComplete, false, unlockCost);
 		} else {
-			// Display insufficient funds
+            // Display insufficient funds
+            GameObject g = Instantiate(basicModalPrefab, parent);
+            g.GetComponent<BasicModalPanel>().SetTextToDisplay("Insufficient points to unlock. Do activity to earn more points.");
 			Debug.Log("No money");
 		}
 	}
@@ -63,8 +68,10 @@ public class LevelSelectionManager : MonoBehaviour {
 			PlayerPointsAndItems.Instance.playerData.levelUnlockTime [levelID] = DateTime.Now;
 			UpdateLockedStatus ();
 		} else {
-			// Display network error
-			Debug.Log("Network error");
+            // Display network error
+            GameObject g = Instantiate(basicModalPrefab, parent);
+            g.GetComponent<BasicModalPanel>().SetTextToDisplay("Unable to connect to the server.");
+            Debug.Log("Network error");
 		}
 	}
 

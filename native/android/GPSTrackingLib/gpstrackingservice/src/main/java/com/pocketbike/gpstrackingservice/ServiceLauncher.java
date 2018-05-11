@@ -1,7 +1,11 @@
 package com.pocketbike.gpstrackingservice;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 
 // This static methods in this class will be called from the Unity process
 public final class ServiceLauncher {
@@ -17,16 +21,33 @@ public final class ServiceLauncher {
     // Stops the service
     public static void stopService() {
         if(activity != null) {
-            activity.stopService(new Intent(activity, GPSService.class));
+            activity.unbindService(mConnection);
         }
     }
+
+    private static boolean mBound = false;
+    private static ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+    };
 
     // Starts the service. Returns true if service was successfully started, false if it was not
     // Registers the ILocationListener with the GPS service in order to receive location updates
     public static boolean startService(ILocationListener listener) {
         boolean success = false;
         if (activity != null) {
-            activity.startService(new Intent(activity, GPSService.class));
+            //activity.startService(new Intent(activity, GPSService.class));
+            activity.bindService(new Intent(activity, GPSService.class), mConnection, Context.BIND_AUTO_CREATE);
             GPSService.registerLocationListener(listener);
             success = true;
         }

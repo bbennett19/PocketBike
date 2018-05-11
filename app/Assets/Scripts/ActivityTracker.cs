@@ -164,7 +164,7 @@ public class ActivityTracker : MonoBehaviour
             Debug.Log("Collect Fail");
             // Display network error
             GameObject g = Instantiate(noInternetModalPanel, modalParent);
-            g.GetComponent<BasicModalPanel>().SetTextToDisplay("Unable to connect to the server. Internet connection required to collect points. Please try again later.");
+            g.GetComponent<BasicModalPanel>().SetTextToDisplay("Unable to connect to the server.");
         }
         collectButton.interactable = true;
     }
