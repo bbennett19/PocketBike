@@ -45,7 +45,14 @@ public class UILeaderboardCategorySelector : MonoBehaviour {
             foreach (BestTimeData item in data)
             {
                 GameObject line = Instantiate(leaderboardLinePrefab, this.transform);
-                line.GetComponent<LeaderboardElement>().SetFields(item.PLAYER_id, place++, item.name, item.time);
+                string label = "s";
+
+                if(buttonToLevelIDMapping[_currentSelected] == -1)
+                {
+                    label = "miles";
+                }
+
+                line.GetComponent<LeaderboardElement>().SetFields(item.PLAYER_id, place++, item.name, item.time, label);
             }
         }
         else

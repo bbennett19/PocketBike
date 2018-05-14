@@ -2,7 +2,6 @@
 using System.Threading;
 using UnityEngine;
 
-#if !UNITY_EDITOR
 public class AndroidGPSServiceCallback : AndroidJavaProxy
 {
     public AndroidGPSServiceCallback() : base("com.pocketbike.gpstrackingservice.ILocationListener") { }
@@ -13,4 +12,3 @@ public class AndroidGPSServiceCallback : AndroidJavaProxy
         OnUpdateLocation(lat, lon, speed);
     }
 }
-#endif
