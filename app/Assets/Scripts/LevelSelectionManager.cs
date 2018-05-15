@@ -5,29 +5,36 @@ using UnityEngine.UI;
 using System;
 using UnityEngine.SceneManagement;
 
-public class LevelSelectionManager : MonoBehaviour {
-	public Button playButton;
-	public Button unlockButton;
+public class LevelSelectionManager : MonoBehaviour
+{
+    public GameObject lockTimer;
+    public GameObject unlockButtonStuff;
+    public GameObject playText;
 	public Text timeText;
+    public Text costText;
 	public int levelID;
 	public int unlockCost;
-	public TimeSpan unlockTime = new TimeSpan(12, 0, 0);
+    public int unlockHours = 12;
+    public TimeSpan unlockTime;
     public GameObject basicModalPrefab;
     public Transform parent;
 	private bool _levelUnlocked = false;
+    private Button _thisButton;
     
 
 	void Awake()
 	{
-		UpdateLockedStatus ();
-		playButton.onClick.AddListener (() => PlayClick());
-		unlockButton.onClick.AddListener (() => UnlockClick());
-	}
+        unlockTime = new TimeSpan(unlockHours, 0, 0);
+        UpdateLockedStatus();
+        costText.text = unlockCost.ToString();
+        _thisButton = GetComponent<Button>();
+        _thisButton.onClick.AddListener(ButtonClick);
+    }
 	
 	// Update is called once per frame
 	void Update () {
 		if (_levelUnlocked) {
-			UpdateLockedStatus ();
+			UpdateLockedStatus();
 		}
 	}
 
@@ -35,25 +42,29 @@ public class LevelSelectionManager : MonoBehaviour {
 	{
 		TimeSpan elapsed = DateTime.Now-PlayerPointsAndItems.Instance.playerData.levelUnlockTime [levelID];	
 		_levelUnlocked = elapsed < unlockTime;
-		playButton.interactable = _levelUnlocked;
-		unlockButton.interactable = !_levelUnlocked;
+        playText.SetActive(_levelUnlocked);
+        lockTimer.SetActive(_levelUnlocked);
+        unlockButtonStuff.SetActive(!_levelUnlocked);
 
-		if (_levelUnlocked) {
+		if (_levelUnlocked)
+        {
 			TimeSpan timeRemaining = unlockTime - elapsed;
 			timeText.text = timeRemaining.Hours.ToString ("D2") + ":" + timeRemaining.Minutes.ToString ("D2") + ":" + timeRemaining.Seconds.ToString ("D2");
 		}
 		else
 		{
-			timeText.text = "";
+			timeText.text = "-:--";
 		}
 	}
 
-	public void UnlockClick()
+	private void Unlock()
 	{
 		if (PlayerPointsAndItems.Instance.playerData.Points >= unlockCost) {
-			unlockButton.interactable = false;
+			_thisButton.interactable = false;
 			NetworkOperations.Instance.UpdatePlayerData (UpdateComplete, false, unlockCost);
-		} else {
+		}
+        else
+        {
             // Display insufficient funds
             GameObject g = Instantiate(basicModalPrefab, parent);
             g.GetComponent<BasicModalPanel>().SetTextToDisplay("Insufficient points to unlock. Do activity to earn more points.");
@@ -63,11 +74,15 @@ public class LevelSelectionManager : MonoBehaviour {
 
 	public void UpdateComplete(bool success)
 	{
-		if (success) {
+        _thisButton.interactable = true;
+		if (success)
+        {
 			PlayerPointsAndItems.Instance.playerData.SetPlayerPointsWithEvent (PlayerPointsAndItems.Instance.playerData.Points - unlockCost);
 			PlayerPointsAndItems.Instance.playerData.levelUnlockTime [levelID] = DateTime.Now;
-			UpdateLockedStatus ();
-		} else {
+			UpdateLockedStatus();
+		}
+        else
+        {
             // Display network error
             GameObject g = Instantiate(basicModalPrefab, parent);
             g.GetComponent<BasicModalPanel>().SetTextToDisplay("Unable to connect to the server.");
@@ -75,7 +90,19 @@ public class LevelSelectionManager : MonoBehaviour {
 		}
 	}
 
-	public void PlayClick()
+    public void ButtonClick()
+    {
+        if(!_levelUnlocked)
+        {
+            Unlock();
+        }
+        else
+        {
+            Play();
+        }
+    }
+
+	private void Play()
 	{
 		LevelSelectionData.Instance.LevelID = levelID;
 		SceneManager.LoadScene("race_main");

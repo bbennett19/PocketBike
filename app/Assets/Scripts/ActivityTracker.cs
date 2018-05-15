@@ -177,8 +177,8 @@ public class ActivityTracker : MonoBehaviour
 
     private void SetTextFields()
     {
-        pointsText.text = "Points Generated: " + PlayerPointsAndItems.Instance.playerData.GeneratedPoints.ToString();
-        distanceText.text = "Distance: " + PlayerPointsAndItems.Instance.playerData.GeneratedDistance.ToString("0.00");
+        pointsText.text = PlayerPointsAndItems.Instance.playerData.GeneratedPoints.ToString();
+        distanceText.text = PlayerPointsAndItems.Instance.playerData.GeneratedDistance.ToString("0.00") + " miles";
     }
 
     public void GeneratePoints()

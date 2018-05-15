@@ -12,7 +12,7 @@ public class UIUpdater : MonoBehaviour
 	void Start ()
     {
         nameText.text = PlayerPointsAndItems.Instance.playerData.Name;
-        pointsText.text = "Points: " + PlayerPointsAndItems.Instance.playerData.Points.ToString();
+        pointsText.text = PlayerPointsAndItems.Instance.playerData.Points.ToString();
         PlayerPointsAndItems.Instance.playerData.PlayerNameChange += UpdatePlayerName;
         PlayerPointsAndItems.Instance.playerData.PlayerPointsChange += UpdatePlayerPoints;
     }
@@ -31,6 +31,6 @@ public class UIUpdater : MonoBehaviour
 
     public void UpdatePlayerPoints(int points)
     {
-        pointsText.text = "Points: " + points;
+        pointsText.text = points.ToString();
     }
 }
