@@ -26,16 +26,13 @@ public class ActivityTrackerSpeed : ActivityTrackerBase
             debug2Text.text = "Time: " + time.ToString("0.00");
             double dist = (time / 1000f) * METER_TO_MILE * location.Speed;
 
-            if (dist != double.NaN)
+            AddDistToStats(dist);
+            if (dist >= minDistInMeters * METER_TO_MILE)
             {
-                AddDistToStats(dist);
-                if (dist >= minDistInMeters * METER_TO_MILE)
-                {
-                    debug3Text.text = "Dist: " + dist.ToString("0.000");
-                    distance += dist;
-                    distanceText.text = "D: " + distance.ToString("0.000");
-                    lastLoc = location;
-                }
+                debug3Text.text = "Dist: " + dist.ToString("0.000");
+                distance += dist;
+                distanceText.text = "D: " + distance.ToString("0.000");
+                lastLoc = location;
             }
         }
     }

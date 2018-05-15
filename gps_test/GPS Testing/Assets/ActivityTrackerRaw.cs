@@ -25,16 +25,13 @@ public class ActivityTrackerRaw : ActivityTrackerBase
         {
             double dist = CalcDistance(lastLoc, location);
 
-            if (dist != double.NaN)
+            AddDistToStats(dist);
+            if (dist >= minDistInMeters * METER_TO_MILE)
             {
-                AddDistToStats(dist);
-                if (dist >= minDistInMeters * METER_TO_MILE)
-                {
-                    debug3Text.text = "Dist: " + dist.ToString("0.0000");
-                    distance += dist;
-                    distanceText.text = "D: " + distance.ToString("0.0000");
-                    lastLoc = location;
-                }
+                debug3Text.text = "Dist: " + dist.ToString("0.0000");
+                distance += dist;
+                distanceText.text = "D: " + distance.ToString("0.0000");
+                lastLoc = location;
             }
         }
     }

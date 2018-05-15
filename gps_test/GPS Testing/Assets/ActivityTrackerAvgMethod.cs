@@ -34,16 +34,13 @@ public class ActivityTrackerAvgMethod : ActivityTrackerBase
                 else
                 {
                     double dist = CalcDistance(lastLoc, point);
-                    if (dist != double.NaN)
+                    AddDistToStats(dist);
+                    if (dist >= minDistInMeters * METER_TO_MILE)
                     {
-                        AddDistToStats(dist);
-                        if (dist >= minDistInMeters * METER_TO_MILE)
-                        {
-                            debug2Text.text = "Dist: " + dist.ToString("0.0000");
-                            distance += dist;
-                            distanceText.text = "D: " + distance.ToString("0.0000");
-                            lastLoc = point;
-                        }
+                        debug2Text.text = "Dist: " + dist.ToString("0.0000");
+                        distance += dist;
+                        distanceText.text = "D: " + distance.ToString("0.0000");
+                        lastLoc = point;
                     }
                 }
                 updates.Clear();
@@ -58,15 +55,18 @@ public class ActivityTrackerAvgMethod : ActivityTrackerBase
         List<Vector2> itemsToRemove = new List<Vector2>();
 
         Vector2 firstToLast = vectorList[vectorList.Count - 1] - vectorList[0];
+        Vector2 firstToPrev = new Vector2();
 
         for(int i = 1; i < vectorList.Count-1; i++)
         {
             Vector2 firstToNext = vectorList[i] - vectorList[0];
 
-            if(Vector2.Dot(firstToNext, firstToLast) <= 0 || firstToNext.magnitude >= firstToLast.magnitude)
+            if(Vector2.Dot(firstToNext, firstToLast) <= 0f || firstToNext.sqrMagnitude >= firstToLast.sqrMagnitude || firstToPrev.sqrMagnitude >= firstToNext.sqrMagnitude)
             {
                 itemsToRemove.Add(vectorList[i]);
             }
+
+            firstToPrev = firstToNext;
         }
 
         filterCount += itemsToRemove.Count;
@@ -93,7 +93,7 @@ public class ActivityTrackerAvgMethod : ActivityTrackerBase
         }
 
         sum = (sum / (float)(vectorList.Count-1)).normalized;
-        float angle = Mathf.Acos(Vector2.Dot(vec, sum));
+        float angle = Mathf.Acos(Mathf.Clamp(Vector2.Dot(vec, sum), -1f, 1f));
         float dist = (end - start).magnitude * Mathf.Cos(angle);
         return start + (sum * dist);
     }

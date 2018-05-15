@@ -3435,8 +3435,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timerText: {fileID: 886764798}
-  stopAfterTime: 1
-  collectionLength: 600
+  stopAfterTime: 0
+  collectionLength: 800000
 --- !u!1 &1699004992
 GameObject:
   m_ObjectHideFlags: 0
