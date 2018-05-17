@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class UILeaderboardCategorySelector : MonoBehaviour {
     public GameObject leaderboardLinePrefab;
+    public Text noConnectionText;
     public Button[] buttons;
     public int[] buttonToLevelIDMapping;
     public int defaultSelected = 0;
@@ -16,6 +17,7 @@ public class UILeaderboardCategorySelector : MonoBehaviour {
     {
         _currentSelected = defaultSelected;
         buttons[_currentSelected].interactable = false;
+        noConnectionText.enabled = false;
     }
 
     private void OnEnable()
@@ -34,6 +36,7 @@ public class UILeaderboardCategorySelector : MonoBehaviour {
             Destroy(t.gameObject);
         }
 
+        noConnectionText.enabled = false;
         NetworkOperations.Instance.GetHighScores(GotHighScores, buttonToLevelIDMapping[_currentSelected]);
     }
 
@@ -57,7 +60,7 @@ public class UILeaderboardCategorySelector : MonoBehaviour {
         }
         else
         {
-            // display network error
+            noConnectionText.enabled = true;
             Debug.Log("Error");
         }
     }

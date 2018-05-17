@@ -6,12 +6,10 @@ using UnityEngine.UI;
 
 public abstract class ActivityTrackerBase : MonoBehaviour
 {
-    public float minDistInMeters = 0f;
     public Text distanceText;
     public Text countText;
     public Text debug1Text;
 	public Text debug2Text;
-    public Text debug3Text;
     public Text avgText;
     public Text stdDevText;
     public Button calcButton;
@@ -42,10 +40,6 @@ public abstract class ActivityTrackerBase : MonoBehaviour
         double haversine = Math.Pow(Math.Sin(deltaLat / 2.0), 2f) + Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(deltaLon / 2.0), 2f);
         double a = Math.Asin(Math.Min(Math.Sqrt(haversine), 1.0));
         return a * 2.0 * 3958.756;
-        //double a = Math.Pow(Math.Sin(deltaLat / 2.0), 2.0) + Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(deltaLon / 2.0), 2.0);
-        //double c = 2.0 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-        // 3959 is radius of earth in miles
-        //return 3959.0 * c;
     }
 
     protected double CalcDistance(Vector2 loc1, Vector2 loc2)
@@ -58,10 +52,6 @@ public abstract class ActivityTrackerBase : MonoBehaviour
         double haversine = Math.Pow(Math.Sin(deltaLat / 2.0), 2f) + Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(deltaLon / 2.0), 2f);
         double a = Math.Asin(Math.Min(Math.Sqrt(haversine), 1.0));
         return a * 2.0 * 3958.756;
-        //double a = Math.Pow(Math.Sin(deltaLat / 2.0), 2.0) + Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(deltaLon / 2.0), 2.0);
-        //double c = 2.0 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-        // 3959 is radius of earth in miles
-        //return 3959.0 * c;
     }
 
     protected double DegToRad(double deg)
@@ -96,8 +86,8 @@ public abstract class ActivityTrackerBase : MonoBehaviour
 
             stdDev = Math.Sqrt(stdDev / distanceVals.Count);
 
-            avgText.text = avg.ToString("0.0000");
-            stdDevText.text = stdDev.ToString("0.0000");
+            avgText.text = "Avg: " + avg.ToString();
+            stdDevText.text = "StdDev: "+ stdDev.ToString();
         }
 
     }

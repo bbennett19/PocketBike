@@ -1,51 +1,43 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ActivityTrackerAvgMethod : ActivityTrackerBase
+public class ActivityTrackerBestFit : ActivityTrackerBase
 {
     
     public int listSize = 5;
-    private List<Vector2> updates = new List<Vector2>();
-    private bool gotLocation = false;
-    private Vector2 lastLoc = new Vector2();
+    private List<Vector2> points = new List<Vector2>();
     private double distance = 0.0;
     private int filterCount = 0;
     private int count = 0;
 
     public override void UpdateLocation(GPSLocation location)
     {
-        updates.Add(new Vector2((float)location.Latitude, (float)location.Longitude));
+        points.Add(new Vector2((float)location.Latitude, (float)location.Longitude));
 
-        if (updates.Count == listSize)
+        if(points.Count == listSize)
         {
-            FilterList(updates);
-            debug1Text.text = "F: " + filterCount.ToString();
-            if(updates.Count == listSize)
+            Vector2 lineOfBestFit = CalculateBestFit(points);
+            Vector2 last = points[0];
+            double dist = 0f;
+            count++;
+            countText.text = "C: " + count.ToString();
+                
+            for(int i = 1; i < points.Count; i++)
             {
-                Vector2 point = CalculateNewPoint(updates);
-                count++;
-                countText.text = "C: " + count.ToString();
-                if(!gotLocation)
-                {
-                    lastLoc = point;
-                    gotLocation = true;
-                }
-                else
-                {
-                    double dist = CalcDistance(lastLoc, point);
-                    AddDistToStats(dist);
-                    if (dist >= minDistInMeters * METER_TO_MILE)
-                    {
-                        debug2Text.text = "Dist: " + dist.ToString("0.0000");
-                        distance += dist;
-                        distanceText.text = "D: " + distance.ToString("0.0000");
-                        lastLoc = point;
-                    }
-                }
-                updates.Clear();
-                updates.Add(point);
+                float projection = Vector2.Dot(lineOfBestFit, points[i] - last);
+                dist += CalcDistance(last, last + (lineOfBestFit * projection));
+                last = points[i];
             }
+
+            AddDistToStats(dist);
+
+            //debug1Text.text = "Dist: " + dist.ToString();
+            distance += dist;
+            distanceText.text = "D: " + distance.ToString();
+            points.Clear();
+            points.Add(last);
         }
     }
 
@@ -70,12 +62,35 @@ public class ActivityTrackerAvgMethod : ActivityTrackerBase
         }
 
         filterCount += itemsToRemove.Count;
-        debug1Text.text = "F: " + filterCount.ToString();
 
         foreach(Vector2 item in itemsToRemove)
         {
             vectorList.Remove(item);
         }
+    }
+
+    private Vector2 CalculateBestFit(List<Vector2> vectorList)
+    {
+        Vector2 avg = new Vector2();
+
+        foreach(Vector2 v in vectorList)
+        {
+            avg += v;
+        }
+
+        avg /= vectorList.Count;
+
+        double rise = 0f;
+        double run = 0f;
+
+        foreach(Vector2 v in vectorList)
+        {
+            rise += (v.x - avg.x) * (v.y - avg.y);
+            run += Math.Pow((v.x - avg.x), 2);
+        }
+
+        double slope = rise / run;
+        return new Vector2(1f, (float)slope).normalized;
     }
 
     private Vector2 CalculateNewPoint(List<Vector2> vectorList)

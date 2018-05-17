@@ -6,15 +6,13 @@ public class ActivityTrackerSpeed : ActivityTrackerBase
 {
     private bool gotLocation = false;
     private GPSLocation lastLoc = new GPSLocation(0, 0, 0);
-    private int updateCount = 0;
     private double distance = 0.0;
+    private int count = 0;
 
     public override void UpdateLocation(GPSLocation location)
     {
-        updateCount++;
-        countText.text = "C:" + updateCount.ToString();
-        debug1Text.text = "Spe: " + location.Speed.ToString("0.000");
-
+        count++;
+        countText.text = "C: " + count.ToString();
         if (!gotLocation)
         {
             lastLoc = location;
@@ -23,17 +21,12 @@ public class ActivityTrackerSpeed : ActivityTrackerBase
         else
         {
             double time = (location.Timestamp - lastLoc.Timestamp).TotalMilliseconds;
-            debug2Text.text = "Time: " + time.ToString("0.00");
             double dist = (time / 1000f) * METER_TO_MILE * location.Speed;
 
             AddDistToStats(dist);
-            if (dist >= minDistInMeters * METER_TO_MILE)
-            {
-                debug3Text.text = "Dist: " + dist.ToString("0.000");
-                distance += dist;
-                distanceText.text = "D: " + distance.ToString("0.000");
-                lastLoc = location;
-            }
+            distance += dist;
+            distanceText.text = "D: " + distance.ToString();
+            lastLoc = location;
         }
     }
 }

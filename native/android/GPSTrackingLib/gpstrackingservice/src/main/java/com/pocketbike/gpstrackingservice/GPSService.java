@@ -79,7 +79,7 @@ public class GPSService extends Service implements LocationListener {
     public void onLocationChanged(Location location) {
         updateCount++;
         if(_listener != null) {
-            _listener.updateLocation(location.getLatitude(), location.getLongitude(), location.getSpeed());
+            _listener.updateLocation(location.getLatitude(), location.getLongitude(), location.getSpeed(), location.getAccuracy());
         }
     }
 
@@ -109,7 +109,7 @@ public class GPSService extends Service implements LocationListener {
 
     public static void test() {
         if (_listener != null) {
-            _listener.updateLocation(1.000, 2.000, 3.0);
+            _listener.updateLocation(1.000, 2.000, 3.0, 0.0f);
         }
     }
 

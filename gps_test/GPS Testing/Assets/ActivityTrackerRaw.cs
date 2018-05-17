@@ -6,16 +6,13 @@ public class ActivityTrackerRaw : ActivityTrackerBase
 {
     private bool gotLocation = false;
     private GPSLocation lastLoc = new GPSLocation(0,0,0);
-    private int updateCount = 0;
     private double distance = 0.0;
+    private int count = 0;
 
     public override void UpdateLocation(GPSLocation location)
     {
-        updateCount++;
-        countText.text = "C:" + updateCount.ToString();
-        debug1Text.text = "Lat: " + location.Latitude.ToString("0.0000");
-        debug2Text.text = "Lon: " + location.Longitude.ToString("0.0000");
-
+        count++;
+        countText.text = "C: " + count.ToString();
         if (!gotLocation)
         {
             lastLoc = location;
@@ -26,13 +23,9 @@ public class ActivityTrackerRaw : ActivityTrackerBase
             double dist = CalcDistance(lastLoc, location);
 
             AddDistToStats(dist);
-            if (dist >= minDistInMeters * METER_TO_MILE)
-            {
-                debug3Text.text = "Dist: " + dist.ToString("0.0000");
-                distance += dist;
-                distanceText.text = "D: " + distance.ToString("0.0000");
-                lastLoc = location;
-            }
+            distance += dist;
+            distanceText.text = "D: " + distance.ToString();
+            lastLoc = location;
         }
     }
 }

@@ -4,8 +4,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GPSLocationUpdateConsumer : MonoBehaviour {
+public class GPSLocationUpdateConsumer : MonoBehaviour
+{
     public Text timerText;
+    public Text accAvgText;
+    public Text accStdDevText;
+    public Text accMinText;
+    public Text accMaxText;
+    public Text speedAvgText;
+    public Text speedStdDevText;
+    public Text speedMinText;
+    public Text speedMaxText;
+    public Text updateCountText;
+    public Button calcButton;
+    public Button stopBtn;
+
     public bool stopAfterTime = false;
     public float collectionLength = 1800;
     private bool collect = true;
@@ -19,11 +32,15 @@ public class GPSLocationUpdateConsumer : MonoBehaviour {
     private object lockObj = new object();
     private AndroidJavaClass _serviceLauncher;
     private bool _gpsServiceActive = false;
+    private int updateCount = 0;
+    private List<double> speedReadings = new List<double>();
+    private List<float> accuracyReadings = new List<float>();
 
     void Start () {
         
         if (Input.location.isEnabledByUser)
         {
+            calcButton.onClick.AddListener(CaculateAndDisplay);
             callback = new AndroidGPSServiceCallback();
             callback.OnUpdateLocation += UpdateLocation;
             // Get the unity android activity
@@ -34,45 +51,23 @@ public class GPSLocationUpdateConsumer : MonoBehaviour {
         }
 	}
 
-    // This function may or may not be called on the main unity thread. This callback is called from the Android GPS service thread
-    public void UpdateLocation(double lat, double lon, double speed)
+    public void StartStop()
     {
-        lock (lockObj)
+        timerStart = !timerStart;
+        collect = !collect;
+    }
+
+    // This function may or may not be called on the main unity thread. This callback is called from the Android GPS service thread
+    public void UpdateLocation(double lat, double lon, double speed, float accuracy)
+    {
+        if (collect)
         {
-            _updateQueue.Enqueue(new GPSLocation(lat, lon, speed));
-        }
-        return;
-        _updates.Enqueue(new Vector2((float)lat, (float)lon));
-        if (_updates.Count == 5)
-        {
-            Vector2 sum = new Vector2();
-            Vector2 start = _updates.Dequeue();
-            Vector2 end = new Vector2();
-            Vector2 vec = new Vector2();
-
-            for (int i = 0; i < 4; i++)
+            lock (lockObj)
             {
-                end = _updates.Dequeue();
-                vec = (end - start).normalized;
-                sum += vec;
-            }
-
-            sum = (sum/4f).normalized;
-
-            if (Vector2.Dot(sum, vec) > 0f)
-            {
-                float angle = Mathf.Acos(Vector2.Dot(vec, sum));
-                float dist = (end - start).magnitude * Mathf.Cos(angle);
-                Vector2 loc = start + (sum * dist);
-                _updates.Enqueue(loc);
-                lock (lockObj)
-                {
-                    _updateQueue.Enqueue(new GPSLocation(loc.x, loc.y, speed));
-                }
-            }
-            else
-            {
-                _updates.Enqueue(start);
+                speedReadings.Add(speed);
+                accuracyReadings.Add(accuracy);
+                updateCount++;
+                _updateQueue.Enqueue(new GPSLocation(lat, lon, speed));
             }
         }
     }
@@ -87,8 +82,9 @@ public class GPSLocationUpdateConsumer : MonoBehaviour {
     {
         if(timerStart)
         {
+            stopBtn.interactable = true;
             elapsed += Time.deltaTime;
-            timerText.text = elapsed.ToString("0.00");
+            timerText.text = "Timer: " + elapsed.ToString("0.00");
 
             if(stopAfterTime && elapsed >= collectionLength)
             {
@@ -98,11 +94,63 @@ public class GPSLocationUpdateConsumer : MonoBehaviour {
         }
         lock (lockObj)
         {
-            if (_updateQueue.Count != 0 && collect)
+            if (_updateQueue.Count != 0)
             {
                 timerStart = true;
                 OnLocationUpdate(_updateQueue.Dequeue());
             }
         }
 	}
+
+    public void CaculateAndDisplay()
+    {
+        if(speedReadings.Count > 0)
+        {
+            float accuracySum = 0.0f;
+            float accuracyMin = float.MaxValue;
+            float accuracyMax = 0f;
+
+            float speedSum = 0.0f;
+            float speedMin = float.MaxValue;
+            float speedMax = 0f;
+
+            for(int i = 0; i < speedReadings.Count; i++)
+            {
+                accuracyMin = Math.Min(accuracyMin, accuracyReadings[i]);
+                accuracyMax = Math.Max(accuracyMax, accuracyReadings[i]);
+                accuracySum += accuracyReadings[i];
+
+                speedMin = (float)Math.Min(speedMin, speedReadings[i]);
+                speedMax = (float)Math.Max(speedMax, speedReadings[i]);
+                speedSum += (float)speedReadings[i];
+            }
+
+            float accuracyAvg = accuracySum / accuracyReadings.Count;
+            double speedAvg = speedSum / speedReadings.Count;
+
+            double accuracyStdDev = 0.0f;
+            double speedStdDev = 0.0;
+
+            for(int i = 0; i < speedReadings.Count; i++)
+            {
+                accuracyStdDev += Math.Pow(accuracyReadings[i] - accuracyAvg, 2);
+                speedStdDev += Math.Pow(speedReadings[i] - speedAvg, 2);
+            }
+
+            accuracyStdDev = Math.Sqrt(accuracyStdDev / accuracyReadings.Count);
+            speedStdDev = Math.Sqrt(speedStdDev / speedReadings.Count);
+
+            updateCountText.text = "Count: " + speedReadings.Count.ToString();
+
+            accAvgText.text = "Acc Avg: " + accuracyAvg.ToString("0.00000");
+            accStdDevText.text = "Acc StdDev: " + accuracyStdDev.ToString("0.00000");
+            accMinText.text = "Acc Min: " + accuracyMin.ToString();
+            accMaxText.text = "Acc Max: " + accuracyMax.ToString();
+
+            speedAvgText.text = "Spe Avg: " + speedAvg.ToString("0.00000");
+            speedStdDevText.text = "Spe StdDev: " + speedStdDev.ToString("0.00000");
+            speedMinText.text = "Spe Min: " + speedMin.ToString();
+            speedMaxText.text = "Spe Max: " + speedMax.ToString();
+        }
+    }
 }
