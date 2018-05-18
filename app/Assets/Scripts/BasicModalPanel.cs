@@ -14,6 +14,6 @@ public class BasicModalPanel : MonoBehaviour
 	
 	public void CloseClick()
     {
-        Destroy(this.gameObject);
+        Destroy(this.gameObject, .15f);
     }
 }

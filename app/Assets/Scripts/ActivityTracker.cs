@@ -17,6 +17,7 @@ public class ActivityTracker : MonoBehaviour
     public GPSLocationUpdateConsumer gpsLocationConsumer;
     public Transform modalParent;
     public GameObject noInternetModalPanel;
+    public AudioClip collectSound;
 
     private GPSLocation lastLoc = new GPSLocation(0,0,0);
     private bool gotLocation = false;
@@ -152,7 +153,7 @@ public class ActivityTracker : MonoBehaviour
     {
         if(success)
         {
-            Debug.Log("Collect Success");
+            AudioPlayer.Instance.audioSource.PlayOneShot(collectSound);
             PlayerPointsAndItems.Instance.playerData.DistanceTraveled = PlayerPointsAndItems.Instance.playerData.GetTotalDistance();
             PlayerPointsAndItems.Instance.playerData.GeneratedDistance = 0f;
             PlayerPointsAndItems.Instance.playerData.SetPlayerPointsWithEvent(PlayerPointsAndItems.Instance.playerData.GetTotalPoints());

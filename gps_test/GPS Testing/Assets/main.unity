@@ -6228,8 +6228,8 @@ MonoBehaviour:
   updateCountText: {fileID: 794498129}
   calcButton: {fileID: 1605130781}
   stopBtn: {fileID: 1309821665}
-  stopAfterTime: 0
-  collectionLength: 800000
+  stopAfterTime: 1
+  collectionLength: 600
 --- !u!1 &1699004992
 GameObject:
   m_ObjectHideFlags: 0

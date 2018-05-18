@@ -10,6 +10,9 @@ public class PlayerController : MonoBehaviour
     public float speedAcceleration;
 	public float maxRotationForce;
 	public WheelJoint2D wheel;
+    public AudioSource idleAudio;
+    public AudioSource notIdleAudio;
+    public AnimationCurve chainPitch;
 	private JointMotor2D _wheelMotor;
 	private Rigidbody2D _rgbd;
     private float _currentSpeed = 0f;
@@ -47,7 +50,9 @@ public class PlayerController : MonoBehaviour
             _addForce = false;
             wheel.useMotor = false;
 
-
+            //idleAudio.pitch = Mathf.Lerp(0.3f, .7f, _rgbd.velocity.magnitude / 4f);
+            idleAudio.mute = false;            
+            notIdleAudio.mute = true;
             // Accelerate/back flip
             if (Input.GetKey(KeyCode.D) || IsScreenSectionTouched(Screen.width / 2, Screen.width))
             {
@@ -59,6 +64,8 @@ public class PlayerController : MonoBehaviour
                 _currentSpeed = Mathf.Clamp(_currentSpeed, targetSpeed, 0f);
                 _wheelMotor.motorSpeed = _currentSpeed;
                 wheel.motor = _wheelMotor;
+                idleAudio.mute = true;
+                notIdleAudio.mute = false;
 
             }
             // Break/front flip overrides acceleration
@@ -70,6 +77,8 @@ public class PlayerController : MonoBehaviour
                 wheel.useMotor = true;
                 _wheelMotor.motorSpeed = 0;
                 wheel.motor = _wheelMotor;
+                idleAudio.mute = true;
+                notIdleAudio.mute = false;
 
             }
         }
@@ -105,18 +114,25 @@ public class PlayerController : MonoBehaviour
             Debug.DrawRay(_forceLocation, _force*5f, Color.red);
             _rgbd.AddForceAtPosition(_force, _forceLocation);
         }
+        Debug.Log(_rgbd.velocity.magnitude);
 	}
 
     public void Freeze()
     {
         _rgbd.constraints = RigidbodyConstraints2D.FreezeAll;
         _paused = true;
+        idleAudio.Stop();
+        notIdleAudio.Stop();
     }
 
     public void UnFreeze()
     {
         _rgbd.constraints = RigidbodyConstraints2D.None;
         _paused = false;
+        idleAudio.Play();
+        notIdleAudio.Play();
+        idleAudio.mute = false;
+        notIdleAudio.mute = false;
     }
 
     public void EndRace(bool c)
