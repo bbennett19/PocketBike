@@ -5,7 +5,7 @@ using UnityEngine;
 public class ActivityTrackerSpeed : ActivityTrackerBase
 {
     private bool gotLocation = false;
-    private GPSLocation lastLoc = new GPSLocation(0, 0, 0);
+    private GPSLocation lastLoc = new GPSLocation(0, 0, 0, 0);
     private double distance = 0.0;
     private int count = 0;
 

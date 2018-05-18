@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Xml.Serialization;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GPSLocationUpdateConsumer : MonoBehaviour
@@ -18,6 +22,7 @@ public class GPSLocationUpdateConsumer : MonoBehaviour
     public Text updateCountText;
     public Button calcButton;
     public Button stopBtn;
+    public Dropdown dropdown;
 
     public bool stopAfterTime = false;
     public float collectionLength = 1800;
@@ -35,12 +40,37 @@ public class GPSLocationUpdateConsumer : MonoBehaviour
     private int updateCount = 0;
     private List<double> speedReadings = new List<double>();
     private List<float> accuracyReadings = new List<float>();
+    private List<GPSLocation> data = new List<GPSLocation>();
 
-    void Start () {
-        
-        if (Input.location.isEnabledByUser)
+    void Start ()
+    {
+        /*if (!PlaybackManager.Instance.playback)
         {
-            calcButton.onClick.AddListener(CaculateAndDisplay);
+            UpdateLocation(12.4444, 12.4434, 0f, 1f);
+            UpdateLocation(12.4434, 12.4404, 0f, 1f);
+            UpdateLocation(12.4424, 12.4414, 0f, 1f);
+            UpdateLocation(12.4414, 12.4424, 0f, 1f);
+            UpdateLocation(12.4464, 12.4484, 0f, 1f);
+            UpdateLocation(12.4474, 12.4474, 0f, 1f);
+            UpdateLocation(12.4484, 12.4454, 0f, 1f);
+            UpdateLocation(12.4494, 12.4424, 0f, 1f);
+            UpdateLocation(12.4444, 12.4484, 0f, 1f);
+            UpdateLocation(12.4434, 12.4474, 0f, 1f);
+            UpdateLocation(12.4464, 12.4464, 0f, 1f);
+            UpdateLocation(12.4424, 12.4454, 0f, 1f);
+            UpdateLocation(12.4474, 12.4434, 0f, 1f);
+        }*/
+        calcButton.onClick.AddListener(CalculateAndDisplay);
+
+        if (PlaybackManager.Instance.playback)
+        {
+            collect = false;
+            LoadData();
+            SetupPlayback();
+        }
+        else if (Input.location.isEnabledByUser)
+        {
+            calcButton.onClick.AddListener(CalculateAndDisplay);
             callback = new AndroidGPSServiceCallback();
             callback.OnUpdateLocation += UpdateLocation;
             // Get the unity android activity
@@ -50,6 +80,22 @@ public class GPSLocationUpdateConsumer : MonoBehaviour
             _gpsServiceActive = _serviceLauncher.CallStatic<bool>("startService", callback);
         }
 	}
+
+    private void OnDestroy()
+    {
+        calcButton.onClick.RemoveListener(CalculateAndDisplay);
+    }
+
+    private void SetupPlayback()
+    {
+        foreach(GPSLocation g in data)
+        {
+            speedReadings.Add(g.Speed);
+            accuracyReadings.Add(g.Accuracy);
+            updateCount++;
+            _updateQueue.Enqueue(g);
+        }
+    }
 
     public void StartStop()
     {
@@ -67,14 +113,46 @@ public class GPSLocationUpdateConsumer : MonoBehaviour
                 speedReadings.Add(speed);
                 accuracyReadings.Add(accuracy);
                 updateCount++;
-                _updateQueue.Enqueue(new GPSLocation(lat, lon, speed));
+                _updateQueue.Enqueue(new GPSLocation(lat, lon, speed, accuracy));
             }
         }
     }
 
+    public void SaveData()
+    {
+        FileStream fs = File.Open(Application.persistentDataPath + "/" + dropdown.options[dropdown.value].text + ".path", FileMode.OpenOrCreate);
+        BinaryFormatter bf = new BinaryFormatter();
+        GPSLocation[] d = data.ToArray();
+        bf.Serialize(fs, data.ToArray());
+        fs.Close();
+    }
+
+    public void LoadData()
+    {
+        dropdown.value = PlaybackManager.Instance.playbackID;
+        string fileName = dropdown.options[dropdown.value].text;
+
+        if (File.Exists(Application.persistentDataPath + "/" + fileName + ".path"))
+        {
+            Debug.Log("load");
+            FileStream file = File.Open(Application.persistentDataPath + "/" + fileName + ".path", FileMode.Open);
+            BinaryFormatter bf = new BinaryFormatter();
+            GPSLocation[] d = bf.Deserialize(file) as GPSLocation[];
+            data.AddRange(d);
+            file.Close();
+        }
+    }
+
+    public void PerformPlayback()
+    {
+        PlaybackManager.Instance.playback = true;
+        PlaybackManager.Instance.playbackID = dropdown.value;
+        SceneManager.LoadScene(0);
+    }
+
     private void OnApplicationQuit()
     {
-        _serviceLauncher.CallStatic("stopService");
+        //_serviceLauncher.CallStatic("stopService");
     }
 
     // This will ensure that the Location Update event is called on the main unity thread
@@ -97,12 +175,14 @@ public class GPSLocationUpdateConsumer : MonoBehaviour
             if (_updateQueue.Count != 0)
             {
                 timerStart = true;
-                OnLocationUpdate(_updateQueue.Dequeue());
+                GPSLocation g = _updateQueue.Dequeue();
+                data.Add(g);
+                OnLocationUpdate(g);
             }
         }
 	}
 
-    public void CaculateAndDisplay()
+    public void CalculateAndDisplay()
     {
         if(speedReadings.Count > 0)
         {

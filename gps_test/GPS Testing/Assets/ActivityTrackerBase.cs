@@ -23,8 +23,9 @@ public abstract class ActivityTrackerBase : MonoBehaviour
 		GPSLocationUpdateConsumer.OnLocationUpdate += UpdateLocation;
 	}
 
-    private void OnApplicationQuit()
+    private void OnDestroy()
     {
+        calcButton.onClick.RemoveListener(CalculateAvgAndStdDev);
         GPSLocationUpdateConsumer.OnLocationUpdate -= UpdateLocation;
     }
 
